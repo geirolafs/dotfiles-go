@@ -1,0 +1,5 @@
+.ssh/
+.gnupg/
+.aws/
+.env
+*_history
