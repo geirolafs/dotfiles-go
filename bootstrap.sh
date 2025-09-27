@@ -13,6 +13,7 @@ stow hypr
 stow zsh
 stow alacritty
 stow ghostty
+stow scripts
 # stow nvim
 # stow git
 
