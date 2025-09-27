@@ -1,0 +1,125 @@
+// Zed settings
+//
+// For information on how to configure Zed, see the Zed
+// documentation: https://zed.dev/docs/configuring-zed
+//
+// To see all of Zed's default setings without changing your
+// custom settings, run `zed: open default settings` from the
+// command palette (cmd-shift-p / ctrl-shift-p)
+{
+  "icon_theme": "Zed (Default)",
+  "terminal": {
+    "dock": "bottom",
+    "copy_on_select": true
+  },
+  "features": {
+    "edit_prediction_provider": "copilot"
+  },
+  "buffer_font_family": "SF Mono",
+  "inlay_hints": {
+    "enabled": true,
+    "show_value_hints": true,
+    "show_type_hints": true,
+    "show_parameter_hints": true,
+    "show_other_hints": true,
+    "show_background": false,
+    "edit_debounce_ms": 700,
+    "scroll_debounce_ms": 50,
+    "toggle_on_modifiers_press": {
+      "control": false,
+      "alt": false,
+      "shift": false,
+      "platform": false,
+      "function": false
+    }
+  },
+  "ui_font_family": "SF Mono",
+  "ui_font_weight": 300,
+  "ui_font_size": 12,
+  "buffer_font_size": 11,
+  "buffer_font_weight": 300,
+  "agent_font_size": 12,
+  "telemetry": {
+    "metrics": false
+  },
+  "vim_mode": true,
+  "theme": {
+    "mode": "system",
+    "light": "Ayu Dark",
+    "dark": "Ayu Dark"
+  },
+  "active_pane_modifiers": {
+    "border_size": 0.0,
+    "inactive_opacity": 0.25
+  },
+  "bottom_dock_layout": "contained",
+  "confirm_quit": true,
+  "gutter": {
+    "line_numbers": true,
+    "runnables": true,
+    "breakpoints": false,
+    "folds": false,
+    "min_line_number_digits": 3
+  },
+  "scrollbar": {
+    "show": "never",
+    "cursors": true,
+    "git_diff": true,
+    "search_results": true,
+    "selected_text": true,
+    "selected_symbol": true,
+    "diagnostics": "all",
+    "axes": {
+      "horizontal": true,
+      "vertical": true
+    }
+  },
+  "tab_bar": {
+    "show": true,
+    "show_nav_history_buttons": false,
+    "show_tab_bar_buttons": false
+  },
+  "tabs": {
+    "close_position": "right",
+    "file_icons": false,
+    "git_status": true,
+    "activate_on_close": "left_neighbour",
+    "show_close_button": "hover",
+    "show_diagnostics": "off"
+  },
+  "toolbar": {
+    "breadcrumbs": true,
+    "quick_actions": true,
+    "selections_menu": true,
+    "agent_review": true,
+    "code_actions": false
+  },
+  "relative_line_numbers": true,
+  "journal": {
+    "path": "/home/go/go",
+    "hour_format": "hour24"
+  },
+  "restore_on_startup": "last_workspace",
+  "scroll_beyond_last_line": "vertical_scroll_margin",
+  "title_bar": {
+    // "show": "always",
+    "show_branch_icon": true,
+    "show_branch_name": true,
+    "show_project_items": false,
+    "show_onboarding_banner": true,
+    "show_user_picture": true,
+    "show_sign_in": true,
+    "show_menus": false
+  },
+  "agent": {
+    "default_model": {
+      "provider": "copilot_chat",
+      "model": "gpt-4.1"
+    },
+    "play_sound_when_agent_done": true,
+    "use_modifier_to_send": true
+  },
+  "project_panel": {
+    "indent_size": 17
+  }
+}
