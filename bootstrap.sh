@@ -10,10 +10,11 @@ cd "$HOME/.dotfiles"
 
 # 2) stow the modules you want
 stow hypr
-# stow zsh
+stow zsh
+stow alacritty
+stow ghostty
 # stow nvim
 # stow git
-# stow alacritty
 
 echo "Done. Symlinks created. 🎉"
 
