@@ -35,4 +35,8 @@ setopt HIST_VERIFY
 setopt HIST_IGNORE_ALL_DUPS
 setopt HIST_REDUCE_BLANKS
 
+# Prompt configuration - hide the partial line indicator
+setopt PROMPT_SP
+export PROMPT_EOL_MARK=""
+
 . "$HOME/.local/share/../bin/env"
