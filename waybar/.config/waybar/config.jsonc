@@ -14,8 +14,8 @@
 		"group/tray-expander",
 		"bluetooth",
 		"network",
-		"pulseaudio",
 		"cpu",
+		"pulseaudio",
 		"battery"
 	],
 	"hyprland/workspaces": {
@@ -63,7 +63,7 @@
 	},
 	"clock": {
 		"format": "{:L%A %H:%M}",
-		"format-alt": "{:L%d %B W%V %Y}",
+		"format-alt": "{:L%d %B %Y}",
 		"tooltip": false,
 		"on-click-right": "omarchy-cmd-tzupdate"
 	},

@@ -3,7 +3,6 @@
 * {
   background-color: @background;
   color: @foreground;
-
   border: 0;
   border-radius: 0;
   min-height: 0;
@@ -19,56 +18,88 @@
   margin-right: 8px;
 }
 
+/* Fix workspace button spacing */
+#workspaces {
+  margin: 0 4px; /* Add consistent margin around workspace container */
+}
+
 #workspaces button {
   all: initial;
-  padding: 0 6px;
-  margin: 0 1.5px;
-  min-width: 9px;
+  font-family: "SF Mono"; /* Re-apply font after 'all: initial' */
+  font-size: 12px;
+  color: @foreground;
+  padding: 0 0px;
+  margin: 0 0px; /* Consistent margin between buttons */
+  min-width: 18px; /* Give buttons a minimum width for consistency */
+}
+
+#workspaces button.active {
+  color: @foreground;
 }
 
 #workspaces button.empty {
   opacity: 0.5;
 }
 
+/* Consistent spacing for the omarchy icon */
+#custom-omarchy {
+  margin: 0 0 0 0; /* Right margin only to space from workspaces */
+  min-width: 16px;
+}
+
+/* Consistent spacing for all right modules - REDUCED SPACING */
 #tray,
-#cpu,
-#battery,
+#cpu {
+  margin: 0 0px 0 4px; /* Reduced from 7.5px to 3px for tighter spacing */
+}
+˚ #battery,
 #network,
 #bluetooth,
-#pulseaudio,
-#custom-omarchy,
-#custom-screenrecording-indicator,
-#custom-update {
-  min-width: 12px;
-  margin: 0 7.5px;
+#pulseaudio {
+  margin: 0 4px; /* Reduced from 7.5px to 3px for tighter spacing */
+}
+
+#bluetooth {
+  margin-left: 0;
+  margin-right: -1px;
+}
+
+#battery {
+  margin-right: 0;
 }
 
 #custom-expand-icon {
-  margin-right: 7px;
+  margin-right: 7px; /* Reduced from 7px to match other spacing */
 }
 
-tooltip {
-  padding: 2px;
-}
-
-#custom-update {
-  font-size: 10px;
-}
-
+/* Clock spacing */
 #clock {
-  margin-left: 8.75px;
+  margin: 0 0px;
 }
 
-.hidden {
-  opacity: 0;
-}
-
+/* Screen recording indicator */
 #custom-screenrecording-indicator {
   min-width: 12px;
-  margin-left: 8.75px;
+  margin: 0 8px;
   font-size: 10px;
 }
 
 #custom-screenrecording-indicator.active {
   color: #a55555;
+}
+
+/* Update indicator */
+#custom-update {
+  font-size: 10px;
+  margin: 0 8px;
+}
+
+/* Tooltip styling */
+tooltip {
+  padding: 2px;
+}
+
+/* Hidden state */
+.hidden {
+  opacity: 0;
 }
