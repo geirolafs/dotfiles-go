@@ -14,6 +14,7 @@ stow zsh
 stow alacritty
 stow ghostty
 stow scripts
+stow rclone
 # stow nvim
 # stow git
 

@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# Mount Dropbox with selective folder visibility
+
+set -euo pipefail
+
+MOUNT_DIR="$HOME/Dropbox/Mount"
+INCLUDE_FILE="$HOME/.config/rclone/mount-includes.txt"
+REMOTE="dropbox:"
+
+# Check if already mounted
+if mountpoint -q "$MOUNT_DIR"; then
+    echo "✓ Dropbox is already mounted at $MOUNT_DIR"
+    exit 0
+fi
+
+# Check if rclone is configured
+if ! rclone listremotes | grep -q "^${REMOTE}$"; then
+    echo "✗ Dropbox remote not configured. Run: rclone config"
+    echo "  1. Choose 'n' for new remote"
+    echo "  2. Name it 'dropbox'"
+    echo "  3. Choose 'dropbox' as the storage type"
+    echo "  4. Follow the OAuth flow"
+    exit 1
+fi
+
+# Check if include file exists
+if [[ ! -f "$INCLUDE_FILE" ]]; then
+    echo "✗ Include patterns file not found: $INCLUDE_FILE"
+    echo "  Run: stow rclone (from ~/.dotfiles)"
+    exit 1
+fi
+
+echo "→ Mounting Dropbox to $MOUNT_DIR..."
+echo "  Visible folders:"
+grep -v '^#' "$INCLUDE_FILE" | grep -v '^$' | sed 's/^/    /'
+
+# Mount with selective visibility and minimal caching
+rclone mount "$REMOTE" "$MOUNT_DIR" \
+    --include-from "$INCLUDE_FILE" \
+    --vfs-cache-mode minimal \
+    --vfs-cache-max-size 2G \
+    --vfs-cache-max-age 24h \
+    --daemon \
+    --log-level INFO
+
+# Wait a moment for mount to establish
+sleep 2
+
+if mountpoint -q "$MOUNT_DIR"; then
+    echo "✓ Dropbox mounted successfully at $MOUNT_DIR"
+    echo "  Cache: 2GB max, 24h retention"
+    echo "  Run 'dropbox-unmount' to unmount"
+else
+    echo "✗ Failed to mount Dropbox"
+    exit 1
+fi

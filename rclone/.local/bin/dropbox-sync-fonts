@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# Sync fontlib folder for offline access
+
+set -euo pipefail
+
+REMOTE="dropbox:"
+REMOTE_PATH="/fontlib"
+LOCAL_PATH="$HOME/Dropbox/Sync/fontlib"
+
+# Check if rclone is configured
+if ! rclone listremotes | grep -q "^${REMOTE}$"; then
+    echo "✗ Dropbox remote not configured. Run: rclone config"
+    exit 1
+fi
+
+# Check network connectivity (optional - remove if you want to try regardless)
+if ! ping -c 1 -W 2 8.8.8.8 &>/dev/null; then
+    echo "⚠ No network connection - skipping sync"
+    echo "  Fonts remain available at: $LOCAL_PATH"
+    exit 0
+fi
+
+echo "→ Syncing fonts from Dropbox..."
+echo "  Remote: ${REMOTE}${REMOTE_PATH}"
+echo "  Local:  $LOCAL_PATH"
+
+# Create local directory if it doesn't exist
+mkdir -p "$LOCAL_PATH"
+
+# Sync fonts (download-only for safety)
+# Using sync instead of bisync initially for stability
+rclone sync "${REMOTE}${REMOTE_PATH}" "$LOCAL_PATH" \
+    --progress \
+    --exclude ".DS_Store" \
+    --exclude "*.tmp" \
+    --exclude "Thumbs.db" \
+    --exclude "*~" \
+    --log-level INFO
+
+# Get stats
+if [[ -d "$LOCAL_PATH" ]]; then
+    FONT_COUNT=$(find "$LOCAL_PATH" -type f \( -name "*.ttf" -o -name "*.otf" -o -name "*.woff" -o -name "*.woff2" \) | wc -l)
+    TOTAL_SIZE=$(du -sh "$LOCAL_PATH" | cut -f1)
+
+    echo "✓ Font sync completed"
+    echo "  Fonts: $FONT_COUNT"
+    echo "  Size: $TOTAL_SIZE"
+    echo "  Path: $LOCAL_PATH"
+else
+    echo "✗ Sync failed - local directory not created"
+    exit 1
+fi

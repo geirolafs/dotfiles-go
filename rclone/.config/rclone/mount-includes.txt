@@ -1,0 +1,11 @@
+# Dropbox Mount Include Patterns
+# Only these folders will be visible when mounting Dropbox
+# Modify these patterns to control what you see in ~/Dropbox-Mount/
+
+# Your specified folders
+/HD/**
+/fontlib/**
+
+# The fontlib folder will be:
+# - Visible in the mount for browsing
+# - Also synced locally to ~/Dropbox-Sync/Fonts for offline access
