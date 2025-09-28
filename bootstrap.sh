@@ -10,6 +10,7 @@ cd "$HOME/.dotfiles"
 
 # 2) stow the modules you want
 stow hypr
+stow waybar
 stow zsh
 stow alacritty
 stow ghostty
