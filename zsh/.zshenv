@@ -14,3 +14,4 @@ path=(
   $path
 )
 export PATH
+. "$HOME/.cargo/env"
