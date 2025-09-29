@@ -1,0 +1,52 @@
+#!/bin/bash
+# Figma launcher with trackpad "disable while typing" override
+# This temporarily disables the trackpad blocking when typing to fix space bar hand tool
+
+# Windows user agent to bypass Figma's Linux blocking
+USER_AGENT="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+
+# Input config paths
+ORIGINAL_INPUT_CONF="$HOME/.config/hypr/input.conf"
+TEMP_INPUT_CONF="$HOME/.config/hypr/input.conf.figma.tmp"
+
+# Function to cleanup on exit
+cleanup() {
+    echo "Restoring original input configuration..."
+    if [[ -f "$TEMP_INPUT_CONF" ]]; then
+        mv "$TEMP_INPUT_CONF" "$ORIGINAL_INPUT_CONF"
+        hyprctl reload
+        echo "Input configuration restored"
+    fi
+}
+
+# Set up cleanup trap
+trap cleanup EXIT INT TERM
+
+# Create temporary input config with disable_while_typing = false
+echo "Creating temporary input configuration for Figma..."
+cp "$ORIGINAL_INPUT_CONF" "$TEMP_INPUT_CONF"
+
+# Add disable_while_typing = false to the touchpad section
+sed -i '/touchpad {/,/}/ {
+    /tap-to-click = false/a\
+\
+    # Temporarily disabled for Figma space bar hand tool\
+    disable_while_typing = false
+}' "$ORIGINAL_INPUT_CONF"
+
+# Reload Hyprland configuration
+echo "Reloading Hyprland with Figma-friendly input settings..."
+hyprctl reload
+
+echo "Launching Figma with Chromium (trackpad override active)..."
+
+# Launch Figma
+exec chromium \
+  --user-agent="${USER_AGENT}" \
+  --user-data-dir="$HOME/.config/figma-chromium" \
+  --enable-features=UseOzonePlatform \
+  --ozone-platform=wayland \
+  --gtk-version=4 \
+  --disable-features=VaapiVideoDecoder \
+  --app="https://www.figma.com/files/recent" \
+  "$@"

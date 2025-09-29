@@ -16,6 +16,8 @@ stow alacritty
 stow ghostty
 stow scripts
 stow rclone
+stow figma
+stow applications
 # stow nvim
 # stow git
 

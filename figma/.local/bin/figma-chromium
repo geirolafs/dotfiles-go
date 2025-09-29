@@ -1,0 +1,18 @@
+#!/bin/bash
+# Launch Chromium with spoofed Windows user agent for Figma
+# This is the confirmed working setup for Linux font access
+
+# Windows user agent to bypass Figma's Linux blocking
+USER_AGENT="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+
+echo "Launching Figma with Chromium (Windows user agent)..."
+
+exec chromium \
+  --user-agent="${USER_AGENT}" \
+  --user-data-dir="$HOME/.config/figma-chromium" \
+  --enable-features=UseOzonePlatform \
+  --ozone-platform=wayland \
+  --gtk-version=4 \
+  --disable-features=VaapiVideoDecoder \
+  --app="https://www.figma.com/files/recent" \
+  "$@"
