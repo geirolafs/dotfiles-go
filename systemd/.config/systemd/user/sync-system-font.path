@@ -1,0 +1,10 @@
+[Unit]
+Description=Watch Alacritty config for font changes
+After=graphical-session.target
+
+[Path]
+PathModified=%h/.config/alacritty/alacritty.toml
+Unit=sync-system-font.service
+
+[Install]
+WantedBy=default.target

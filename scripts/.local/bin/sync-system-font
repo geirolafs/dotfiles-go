@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Sync terminal font from Alacritty config to GTK/GNOME settings
+# This makes Nautilus and other GTK apps use the same font as terminals
+
+ALACRITTY_CONFIG="$HOME/.config/alacritty/alacritty.toml"
+
+# Extract font family from Alacritty config
+FONT_FAMILY=$(grep -m1 'family = ' "$ALACRITTY_CONFIG" | sed 's/.*family = "\(.*\)".*/\1/')
+FONT_SIZE=$(grep -m1 '^size = ' "$ALACRITTY_CONFIG" | sed 's/.*= \(.*\)/\1/')
+
+if [ -n "$FONT_FAMILY" ]; then
+    # Set GTK/GNOME fonts to match terminal
+    gsettings set org.gnome.desktop.interface font-name "$FONT_FAMILY $FONT_SIZE"
+    gsettings set org.gnome.desktop.interface monospace-font-name "$FONT_FAMILY 11"
+
+    echo "✓ Synced font: $FONT_FAMILY (size: $FONT_SIZE)"
+else
+    echo "✗ Could not find font in $ALACRITTY_CONFIG"
+    exit 1
+fi

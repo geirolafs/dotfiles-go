@@ -1,15 +1,19 @@
 @import "../omarchy/current/theme/waybar.css";
 
+/* =========================
+   BASE STYLES & VARIABLES
+   ========================= */
 * {
   background-color: @background;
   color: @foreground;
   border: 0;
   border-radius: 0;
   min-height: 0;
-  font-family: "SF Mono";
+  font-family: 'JetBrainsMono Nerd Font';
   font-size: 12px;
 }
 
+/* Module container spacing */
 .modules-left {
   margin-left: 8px;
 }
@@ -18,63 +22,101 @@
   margin-right: 8px;
 }
 
-/* Fix workspace button spacing */
+/* =========================
+   LEFT SIDE MODULES
+   ========================= */
+
+/* Workspace container */
 #workspaces {
-  margin: 0 4px; /* Add consistent margin around workspace container */
+  margin: 0;
 }
 
 #workspaces button {
   all: initial;
-  font-family: "SF Mono"; /* Re-apply font after 'all: initial' */
+  font-family: 'JetBrainsMono Nerd Font';
+  font-weight: 400;
   font-size: 12px;
   color: @foreground;
-  padding: 0 0px;
-  margin: 0 0px; /* Consistent margin between buttons */
-  min-width: 18px; /* Give buttons a minimum width for consistency */
+  padding: 0;
+  margin: 0;
+  min-width: 18px;
+  opacity: 0.4;
 }
 
 #workspaces button.active {
+  opacity: 1;
   color: @foreground;
 }
 
 #workspaces button.empty {
-  opacity: 0.5;
+  opacity: 0.2;
 }
 
-/* Consistent spacing for the omarchy icon */
+/* Omarchy icon spacing */
 #custom-omarchy {
-  margin: 0 0 0 0; /* Right margin only to space from workspaces */
+  margin: 0 6px 0 0;
   min-width: 16px;
 }
 
-/* Consistent spacing for all right modules - REDUCED SPACING */
-#tray,
-#cpu {
-  margin: 0 0px 0 4px; /* Reduced from 7.5px to 3px for tighter spacing */
+/* =========================
+   RIGHT SIDE MODULES - BASE MARGINS
+   (Adjust these values visually for optical alignment)
+   ========================= */
+
+/* System tray */
+#tray {
+  margin: 0 3px;
+  font-size: 10px;
 }
-˚ #battery,
+
+/* CPU monitor */
+#cpu {
+  margin: 0 3px;
+  font-size: 14px;
+  min-width: 20px;
+}
+
+/* Network, Bluetooth, Audio - Base styling */
 #network,
 #bluetooth,
 #pulseaudio {
-  margin: 0 4px; /* Reduced from 7.5px to 3px for tighter spacing */
+  margin: 0 3px;
+  min-width: 20px;
 }
 
+/* Battery - often needs different spacing */
+#battery {
+  margin: 0 3px;
+  min-width: 20px;
+}
+
+/* =========================
+   FINE-TUNE ADJUSTMENTS
+   (Modify these for visual optical alignment)
+   ========================= */
+
+/* Individual module tweaks for visual balance */
 #bluetooth {
-  margin-left: 0;
-  margin-right: -1px;
+  margin-left: 2px;
+  margin-right: 2px;
 }
 
 #battery {
-  margin-right: 0;
+  margin-right: 4px;
 }
 
-#custom-expand-icon {
-  margin-right: 7px; /* Reduced from 7px to match other spacing */
-}
+/* =========================
+   UTILITY MODULES
+   ========================= */
 
-/* Clock spacing */
+/* Clock styling */
 #clock {
-  margin: 0 0px;
+  margin: 0;
+}
+
+/* Expand icon */
+#custom-expand-icon {
+  margin-right: 7px;
 }
 
 /* Screen recording indicator */
@@ -93,6 +135,10 @@
   font-size: 10px;
   margin: 0 8px;
 }
+
+/* =========================
+   GENERAL STYLING
+   ========================= */
 
 /* Tooltip styling */
 tooltip {

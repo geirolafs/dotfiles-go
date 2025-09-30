@@ -1,0 +1,45 @@
+[mgr]
+ratio = [1, 4, 3]
+sort_by = "mtime"
+sort_sensitive = false
+sort_reverse = true
+sort_dir_first = true
+sort_translit = false
+linemode = "size"
+show_hidden = false
+show_symlink = true
+scrolloff = 5
+
+[preview]
+# Image preview - Yazi auto-detects Kitty graphics protocol in Ghostty
+image_filter = "lanczos3"
+image_quality = 80
+cache_dir = ""
+
+[opener]
+# Default openers
+edit = [
+    { run = '$EDITOR "$@"', block = true, for = "unix" },
+]
+open = [
+    { run = 'xdg-open "$@"', desc = "Open", for = "linux" },
+]
+reveal = [
+    { run = 'exiftool "$1"; echo "Press enter to exit"; read', block = true, desc = "Show EXIF", for = "unix" },
+]
+
+[open]
+# File type associations
+rules = [
+    { mime = "text/*", use = "edit" },
+    { mime = "image/*", use = "open" },
+    { mime = "video/*", use = "open" },
+    { mime = "audio/*", use = "open" },
+    { mime = "inode/directory", use = "open" },
+    { mime = "application/pdf", use = "open" },
+]
+
+[tasks]
+micro_workers = 5
+macro_workers = 10
+bizarre_retry = 5

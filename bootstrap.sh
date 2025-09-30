@@ -18,7 +18,13 @@ stow scripts
 stow rclone
 stow figma
 stow applications
-# stow nvim
+stow yazi
+stow gtk
+stow systemd
+stow mise
+stow omarchy
+stow zed
+stow nvim
 # stow git
 
 echo "Done. Symlinks created. 🎉"

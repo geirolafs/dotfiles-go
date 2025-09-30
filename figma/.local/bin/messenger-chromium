@@ -1,0 +1,14 @@
+#!/bin/bash
+# Launch Facebook Messenger in Chromium with proper Wayland support
+# Uses separate profile for Messenger
+
+echo "Launching Facebook Messenger with Chromium..."
+
+exec chromium \
+  --user-data-dir="$HOME/.config/messenger-chromium" \
+  --enable-features=UseOzonePlatform \
+  --ozone-platform=wayland \
+  --gtk-version=4 \
+  --disable-features=VaapiVideoDecoder \
+  --app="https://www.messenger.com/" \
+  "$@"

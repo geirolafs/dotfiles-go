@@ -1,0 +1,98 @@
+/* Remove ALL rounded corners - GTK3 */
+* {
+  border-radius: 0px;
+}
+
+/* Main windows */
+GtkWindow,
+.window-frame {
+  border-radius: 0px;
+  box-shadow: none;
+}
+
+/* File browsers */
+.nautilus-window,
+NautilusWindow,
+.thunar,
+.caja-window {
+  border-radius: 0px;
+  box-shadow: none;
+}
+
+/* Dialogs */
+.dialog,
+.message-dialog,
+GtkDialog {
+  border-radius: 0px;
+  box-shadow: none;
+}
+
+/* Sidebar */
+.sidebar,
+.sidebar-row,
+GtkSidebar {
+  border-radius: 0px;
+  box-shadow: none;
+}
+
+/* Buttons */
+.button,
+GtkButton {
+  border-radius: 0px;
+  box-shadow: none;
+}
+
+/* Text entries */
+.entry,
+GtkEntry {
+  border-radius: 0px;
+}
+
+/* Menus */
+.menu,
+GtkMenu,
+.context-menu {
+  border-radius: 0px;
+  box-shadow: none;
+}
+
+/* Popovers */
+.popover,
+GtkPopover {
+  border-radius: 0px;
+  box-shadow: none;
+}
+
+/* Header/Title bars */
+.header-bar,
+.titlebar,
+GtkHeaderBar {
+  border-radius: 0px;
+  box-shadow: none;
+}
+
+/* Info bars */
+.info,
+.info-bar,
+GtkInfoBar {
+  border-radius: 0px;
+}
+
+/* Tooltips */
+.tooltip,
+GtkTooltip {
+  border-radius: 0px;
+  box-shadow: none;
+}
+
+/* Scrollbars */
+.scrollbar,
+GtkScrollbar {
+  border-radius: 0px;
+}
+
+/* Frames */
+.frame,
+GtkFrame {
+  border-radius: 0px;
+}

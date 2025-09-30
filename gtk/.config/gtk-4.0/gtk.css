@@ -1,0 +1,94 @@
+/* Remove ALL rounded corners - GTK4 */
+* {
+  border-radius: 0px;
+}
+
+/* Main window */
+window {
+  border-radius: 0px;
+  box-shadow: none;
+}
+
+/* Nautilus specific */
+.nautilus-window {
+  border-radius: 0px;
+  box-shadow: none;
+}
+
+/* Dialogs */
+dialog,
+messagedialog {
+  border-radius: 0px;
+  box-shadow: none;
+}
+
+/* Sidebar */
+.sidebar,
+.sidebar-row,
+.navigation-sidebar {
+  border-radius: 0px;
+  box-shadow: none;
+}
+
+/* Buttons */
+button {
+  border-radius: 0px;
+  box-shadow: none;
+}
+
+/* Text entries */
+entry {
+  border-radius: 0px;
+}
+
+/* Menus and popovers */
+menu,
+popover,
+.menu-button,
+menuitem {
+  border-radius: 0px;
+  box-shadow: none;
+}
+
+/* Header bars and title bars */
+headerbar,
+.titlebar {
+  border-radius: 0px;
+  box-shadow: none;
+}
+
+/* Cards and list views (common in Nautilus) */
+.card,
+.view,
+list,
+listview {
+  border-radius: 0px;
+}
+
+/* Tooltips */
+tooltip {
+  border-radius: 0px;
+  box-shadow: none;
+}
+
+/* Scrollbars */
+scrollbar {
+  border-radius: 0px;
+}
+
+/* Switches and check buttons */
+switch,
+checkbutton {
+  border-radius: 0px;
+}
+
+/* Progress bars */
+progressbar,
+progress {
+  border-radius: 0px;
+}
+
+/* Info/notification bars */
+infobar {
+  border-radius: 0px;
+}

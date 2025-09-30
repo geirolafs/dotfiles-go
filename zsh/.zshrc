@@ -40,3 +40,4 @@ setopt PROMPT_SP
 export PROMPT_EOL_MARK=""
 
 . "$HOME/.local/share/../bin/env"
+export PATH="/home/go/.cache/.bun/bin:$PATH"
