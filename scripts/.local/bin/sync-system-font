@@ -1,19 +1,37 @@
 #!/usr/bin/env bash
 # Sync terminal font from Alacritty config to GTK/GNOME settings
 # This makes Nautilus and other GTK apps use the same font as terminals
+#
+# Override behavior:
+# Create ~/.config/sync-system-font.conf with:
+#   FONT_OVERRIDE="Your Font Name"
+#   FONT_SIZE_OVERRIDE="12"
 
 ALACRITTY_CONFIG="$HOME/.config/alacritty/alacritty.toml"
+OVERRIDE_CONFIG="$HOME/.config/sync-system-font.conf"
 
-# Extract font family from Alacritty config
-FONT_FAMILY=$(grep -m1 'family = ' "$ALACRITTY_CONFIG" | sed 's/.*family = "\(.*\)".*/\1/')
-FONT_SIZE=$(grep -m1 '^size = ' "$ALACRITTY_CONFIG" | sed 's/.*= \(.*\)/\1/')
+# Check for override config file
+if [ -f "$OVERRIDE_CONFIG" ]; then
+    source "$OVERRIDE_CONFIG"
+fi
+
+# Use override if set, otherwise extract from Alacritty config
+if [ -n "$FONT_OVERRIDE" ]; then
+    FONT_FAMILY="$FONT_OVERRIDE"
+    FONT_SIZE="${FONT_SIZE_OVERRIDE:-10}"
+    SOURCE="override config"
+else
+    FONT_FAMILY=$(grep -m1 'family = ' "$ALACRITTY_CONFIG" | sed 's/.*family = "\(.*\)".*/\1/')
+    FONT_SIZE=$(grep -m1 '^size = ' "$ALACRITTY_CONFIG" | sed 's/.*= \(.*\)/\1/')
+    SOURCE="Alacritty config"
+fi
 
 if [ -n "$FONT_FAMILY" ]; then
     # Set GTK/GNOME fonts to match terminal
     gsettings set org.gnome.desktop.interface font-name "$FONT_FAMILY $FONT_SIZE"
     gsettings set org.gnome.desktop.interface monospace-font-name "$FONT_FAMILY 11"
 
-    echo "✓ Synced font: $FONT_FAMILY (size: $FONT_SIZE)"
+    echo "✓ Synced font: $FONT_FAMILY (size: $FONT_SIZE) [from $SOURCE]"
 else
     echo "✗ Could not find font in $ALACRITTY_CONFIG"
     exit 1

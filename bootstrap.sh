@@ -21,6 +21,7 @@ stow applications
 stow yazi
 stow gtk
 stow systemd
+stow sync-system-font
 stow mise
 stow omarchy
 stow zed

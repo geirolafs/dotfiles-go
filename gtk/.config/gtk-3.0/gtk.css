@@ -69,6 +69,7 @@ GtkPopover {
 GtkHeaderBar {
   border-radius: 0px;
   box-shadow: none;
+  background-image: none;
 }
 
 /* Info bars */

@@ -55,6 +55,7 @@ headerbar,
 .titlebar {
   border-radius: 0px;
   box-shadow: none;
+  background-image: none;
 }
 
 /* Cards and list views (common in Nautilus) */
