@@ -2,4 +2,59 @@
 .gnupg/
 .aws/
 .env
-*_history
+
+# Shell history files
+*_history/
+
+# Vim/Neovim temporary files
+*.swp
+*.swo
+*.swn
+*~
+
+# Editor backup files
+*.bak
+*.orig
+
+# macOS 
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+.directory
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Node.js
+node_modules/
+npm-debug.log*
+
+# Rust
+target/
+Cargo.lock
+
+# Local notes and TODO files
+TODO.md
+NOTES.md
+*.local*
+
+
+# Temporary patches
+*.patch.local
+*-temp.patch
+
+# Temporary comparison files
+omarchy-mac-comparison.md
+
+# Cache directories
+.cache/
+*.cache
+
+# PID files
+*.pid

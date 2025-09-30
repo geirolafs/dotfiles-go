@@ -1,0 +1,20 @@
+[Unit]
+Description=Battery level monitor for MacBook Pro
+Documentation=man:upower(1)
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/battery-monitor
+Restart=always
+RestartSec=10
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+
+# Make sure we have access to D-Bus for notifications
+Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/%U/bus
+
+[Install]
+WantedBy=default.target
