@@ -19,3 +19,4 @@ shell-integration-features = no-cursor
 
 # Keyboard bindings
 keybind = f11=toggle_fullscreen
+keybind = shift+enter=text:\x1b\r

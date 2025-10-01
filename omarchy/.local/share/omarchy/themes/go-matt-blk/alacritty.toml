@@ -1,0 +1,45 @@
+[window]
+# window padding {px}
+padding.x = 4
+padding.y = 4
+
+[font]
+size = 12.0
+
+[colors]
+[colors.primary]
+background = "#121212"
+foreground = "#E6E3D9"
+dim_foreground = "#A09E97"
+
+[colors.cursor]
+text = "#121212"
+cursor = "#333333"
+
+[colors.vi_mode_cursor]
+text = "#121212"
+cursor = "#333333"
+
+[colors.selection]
+text = "#121212"
+background = "#FFF9B9"
+
+[colors.normal]
+black = "#333333"
+red = "#EC5B5B"
+green = "#ffeb07"
+yellow = "#EC5B5B"
+blue = "#FFF9B9"
+magenta = "#EC5B5B"
+cyan = "#A09E97"
+white = "#E6E3D9"
+
+[colors.bright]
+black = "#FFEB07"
+red = "#DCFFB2"
+green = "#EC5B5B"
+yellow = "#A1D8FF"
+blue = "#FF81C8"
+magenta = "#FFE8E8"
+cyan = "#FFEB07"
+white = "#DCFFB2"

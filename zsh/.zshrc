@@ -24,7 +24,17 @@ source $ZSH/oh-my-zsh.sh
 # This section will override any conflicting settings from Omarchy
 
 # aliases 
-alias dotfiles='cd ~/.dotfiles' 
+alias dotfiles='cd ~/.dotfiles/ && l' 
+alias docs='cd ~/Documents/ && l'
+alias y='yazi'
+dev() {
+  case "$1" in
+    go) cd ~/Development/go/ && l ;;
+    www) cd ~/Development/go/www/ && l ;;
+    prj) cd ~/Development/projects/ && l ;;
+    *) cd ~/Development/ && l ;;
+  esac
+}
 
 # Custom exports
 export EDITOR='nvim'  # Fallback for non-Hyprland sessions (SSH, TTY)

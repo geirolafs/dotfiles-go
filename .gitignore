@@ -44,6 +44,11 @@ TODO.md
 NOTES.md
 *.local*
 
+# Exception for Omarchy theme configs
+!omarchy/.local/
+!omarchy/.local/share/
+!omarchy/.local/share/omarchy/
+!omarchy/.local/share/omarchy/themes/
 
 # Temporary patches
 *.patch.local
