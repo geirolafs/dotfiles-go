@@ -190,7 +190,6 @@ systemctl --user list-units --type=service --state=running
 - Each top-level directory is a "stow package" (e.g., `hypr/`, `waybar/`, `nvim/`)
 - Inside each package, mirror the exact `$HOME` directory structure
 - Stow creates symlinks: `~/.config/hypr/` → `~/.dotfiles/hypr/.config/hypr/`
-- **Exception**: Zed's `settings.json` is copied (not symlinked) for hot-reload compatibility
 
 ### Omarchy Integration
 The configuration uses Omarchy's layered config system:
@@ -260,7 +259,6 @@ Themes are stored in `omarchy/.local/share/omarchy/themes/<theme-name>/`:
 - `gtk/` - GTK3/4 configurations (bookmarks, mimeapps)
 - `systemd/` - User systemd services (battery-monitor, sync-system-font, figma-agent)
 - `yazi/` - Terminal file manager (yazi.toml, keymap.toml)
-- `zed/` - Zed editor settings (copied, not symlinked for hot-reload)
 - `rclone/` - Cloud storage sync config
 - `mise/` - Runtime version manager
 - `fastfetch/` - System info tool
@@ -279,7 +277,6 @@ Themes are stored in `omarchy/.local/share/omarchy/themes/<theme-name>/`:
 2. Add config files mirroring home structure
 3. Add to `bootstrap.sh` stow commands
 4. For theme support: add theme file to each theme in `omarchy/.local/share/omarchy/themes/*/`
-5. If Zed-like hot reload issues exist, add copy logic to `bootstrap.sh`
 
 ## Key Conventions
 
