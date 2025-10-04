@@ -27,10 +27,16 @@ open = [
 reveal = [
     { run = 'exiftool "$1"; echo "Press enter to exit"; read', block = true, desc = "Show EXIF", for = "unix" },
 ]
+typora = [
+    { run = 'typora "$@"', orphan = true, desc = "Open in Typora", for = "linux" },
+]
 
 [open]
 # File type associations
 rules = [
+    { name = "*.md", use = "typora"},
+    { name = "*.mdx", use = "editor"},
+    { name = "*.json", use = "editor"},
     { mime = "text/*", use = "edit" },
     { mime = "image/*", use = "open" },
     { mime = "video/*", use = "open" },

@@ -148,6 +148,40 @@ figma-chromium-trackpad-fix
 
 # Battery monitoring with multi-level alerts
 battery-monitor
+
+# Check battery status manually
+upower -i /org/freedesktop/UPower/devices/battery_macsmc_battery
+
+# Keyboard backlight control
+brightnessctl --device=kbd_backlight set 50%
+brightnessctl --device=kbd_backlight get
+```
+
+### Debugging and Testing
+```bash
+# Check if configs are properly symlinked
+stow -n <package-name>     # Dry run to see what would be linked
+ls -la ~/.config/hypr/     # Verify symlinks point to .dotfiles
+
+# Test Hyprland config syntax
+hyprctl reload            # Reload config (shows errors if invalid)
+hyprctl monitors          # List connected displays
+hyprctl clients           # List open windows
+
+# Theme system diagnostics
+ls -la ~/.config/omarchy/current/theme/  # Check active theme
+readlink ~/.config/omarchy/current/theme # Show theme path
+ls ~/.local/share/omarchy/themes/        # List available themes
+
+# Audio debugging
+systemctl --user status wireplumber pipewire
+pw-top                    # Monitor PipeWire graph
+wpctl status             # Check WirePlumber devices
+
+# Service debugging
+systemctl --user status battery-monitor
+journalctl --user -u battery-monitor -f
+systemctl --user list-units --type=service --state=running
 ```
 
 ## Architecture
@@ -191,6 +225,11 @@ Themes are stored in `omarchy/.local/share/omarchy/themes/<theme-name>/`:
 - Uses UPower to monitor `/org/freedesktop/UPower/devices/battery_macsmc_battery`
 - Multi-level alerts (20%, 10%, 5%) with persistent flags in `/run/user/$UID`
 - Prevents unexpected shutdowns on MacBook hardware
+- **Note:** This is a custom replacement for Omarchy's `omarchy-battery-monitor` with enhanced features:
+  - 3-tier alerting vs Omarchy's single threshold
+  - Continuous monitoring loop vs timer-based polling
+  - Asahi-specific battery path vs generic detection
+  - Uses `set -euo pipefail` for strict error checking (requires `|| true` on grep commands that may not match)
 
 **Font sync** (`scripts/.local/bin/sync-system-font`):
 - Extracts font from Alacritty config and syncs to GTK/GNOME settings
@@ -200,18 +239,39 @@ Themes are stored in `omarchy/.local/share/omarchy/themes/<theme-name>/`:
 ### Module Organization
 
 **Core modules**:
-- `hypr/` - Hyprland window manager (modular configs: autostart, bindings, input, monitors, etc.)
+- `hypr/` - Hyprland window manager (modular configs: autostart, bindings, input, monitors, looknfeel, windows, envs)
 - `waybar/` - Status bar with theme integration
-- `nvim/` - Neovim with Claude Code integration plugin (`lua/plugins/claude-integration.lua`)
-- `ghostty/`, `alacritty/` - Terminal emulators
+- `nvim/` - Neovim (LazyVim-based) with Claude Code integration
+  - Core config: `lua/config/` (lazy.lua, options.lua, keymaps.lua, autocmds.lua)
+  - Plugins: `lua/plugins/` (claude-integration, editor-extras, language-extras, theme, web-development, which-key-extras)
+- `ghostty/`, `alacritty/` - Terminal emulators (TOML configs)
 - `zsh/` - Shell configuration
 
 **Utility modules**:
-- `omarchy/` - Theme files and theme management scripts
-- `scripts/` - System utilities (battery-monitor, sync-system-font, keyboard backlight)
-- `figma/` - Figma launcher with Asahi workarounds
-- `gtk/` - GTK3/4 configurations
-- `systemd/` - User systemd services
+- `omarchy/` - Theme files (`.local/share/omarchy/themes/`) and theme management scripts (`.local/share/omarchy/bin/omarchy-theme-set`)
+- `scripts/` - System utilities:
+  - `battery-monitor` - Multi-level battery alerts (20%, 10%, 5%)
+  - `sync-system-font` - Alacritty → GTK font sync
+  - `keyboard-backlight-swayidle.sh` - Auto-off backlight after 10s idle
+  - `omarchy-launch-wifi`, `omarchy-launch-bluetooth` - Network utilities
+  - `dropbox-mount`, `dropbox-unmount` - Cloud storage
+  - `restore-volume.sh` - Volume restoration
+- `figma/` - Figma launcher with Asahi workarounds (trackpad fix, font access)
+- `gtk/` - GTK3/4 configurations (bookmarks, mimeapps)
+- `systemd/` - User systemd services (battery-monitor, sync-system-font, figma-agent)
+- `yazi/` - Terminal file manager (yazi.toml, keymap.toml)
+- `zed/` - Zed editor settings (copied, not symlinked for hot-reload)
+- `rclone/` - Cloud storage sync config
+- `mise/` - Runtime version manager
+- `fastfetch/` - System info tool
+- `applications/` - .desktop entries for app launcher
+
+**Audio modules** (Asahi-specific):
+- `pipewire/` - PipeWire config (`.config/pipewire/pipewire.conf.d/50-quantum.conf` - reduced to 128 frames)
+- `wireplumber/` - WirePlumber config (`.config/wireplumber/wireplumber.conf.d/`)
+- `asahi-audio-custom/` - Custom DSP graphs (`.local/share/asahi-audio-custom/j316/`)
+- `easyeffects/` - EasyEffects presets (`.config/easyeffects/output/MacBook_Pro_Enhanced.json`)
+- `sync-system-font/` - Font sync service configs
 
 ### Adding New Modules
 
@@ -239,3 +299,198 @@ Keybindings in `nvim/.config/nvim/lua/plugins/claude-integration.lua`:
 - `<leader>as` - Send selection to Claude (visual mode)
 - `<leader>aa` - Accept diff
 - Split configured at 30% width on right side
+
+## Configs Outside Dotfiles Management
+
+Some configurations are intentionally **not** managed by this dotfiles repo:
+
+### Application State/Cache (Never Track)
+- Browser profiles: `~/.config/{chromium,Brave,discord,obsidian}` - contain auth tokens, cache
+- 1Password, Typora, font-manager - contain app-specific state
+- Application-specific databases and credentials
+
+### System-Provided Configs (Omarchy-Managed)
+These are provided by Omarchy and should not be duplicated in dotfiles:
+- `~/.config/environment.d/fcitx.conf` - Input method config
+- `~/.config/environment.d/flatpak.conf` - Flatpak app discovery
+- `~/.config/{hypr/hypridle.conf,hypr/hyprlock.conf,hypr/hyprsunset.conf}` - Omarchy defaults
+
+### User Configs Intentionally Outside Dotfiles
+- `~/.config/git/config` - Contains personal email/name (privacy)
+- `~/.config/gh/` - GitHub CLI with personal tokens
+- `~/.config/btop/btop.conf` - Auto-generated, frequently changes
+- `~/.config/walker/config.toml` - Omarchy-provided, may be customized
+- `~/.config/swayosd/` - Omarchy-provided OSD settings
+- `~/.config/kitty/kitty.conf` - Terminal config (using Ghostty primarily)
+
+**Note:** If you customize any of these heavily, consider adding them to the dotfiles repo.
+
+## Omarchy Local Modifications Strategy
+
+The Omarchy installation at `~/.local/share/omarchy` is a git repo. Local modifications:
+
+### What's Safe to Modify
+- **Theme files** - but better to create custom themes in `~/.dotfiles/omarchy/.local/share/omarchy/themes/`
+- **Scripts in `bin/`** - can be replaced with symlinks to dotfiles versions (already done for `omarchy-theme-set`, `omarchy-cmd-screenrecord`)
+
+### What to Never Modify
+- `default/` directory - Omarchy-provided defaults, will conflict on updates
+- Core configuration structure
+
+### Current Local Modifications (Committed)
+1. `default/hypr/envs.conf` - Added `VK_ICD_FILENAMES` for ARM64 walker support
+2. `themes/everforest/ghostty.conf` - Fixed typo in theme name
+3. `bin/omarchy-theme-set` - Replaced with symlink to dotfiles version
+4. `bin/omarchy-cmd-screenrecord` - Replaced with symlink to dotfiles version
+5. `.gitignore` - Ignores custom theme symlinks managed in dotfiles
+
+### Update Strategy
+When running Omarchy updates (`omarchy-update`):
+1. Committed changes will be preserved or create merge conflicts
+2. Resolve conflicts by keeping customizations when needed
+3. Custom theme symlinks are ignored and won't conflict
+
+## Important Constraints
+
+### Stow Package Isolation
+When modifying configuration files:
+1. **Never edit files in `~/.local/share/omarchy/default/`** - these are Omarchy-provided defaults
+2. **Always edit files within their stow package directories** (e.g., `hypr/.config/hypr/`, not `~/.config/hypr/`)
+3. **After editing, re-stow the package**: `stow -R <package-name>` to update symlinks
+4. Changes to theme files go in `omarchy/.local/share/omarchy/themes/<theme-name>/`
+
+### Theme Configuration Layer Priority
+When a setting appears in multiple places, the priority order is:
+1. User overrides in `~/.config/<app>/` (this dotfiles repo) - **highest priority**
+2. Theme layer at `~/.config/omarchy/current/theme/` (symlink to active theme)
+3. Omarchy defaults at `~/.local/share/omarchy/default/<app>/` - **lowest priority**
+
+### Audio Configuration Warnings
+- Custom audio configs require root privileges to fully override system configs
+- Test audio changes carefully - crackling issues may persist despite optimizations
+- Always keep backup of working audio configuration before experimenting
+- Revert to stock: `rm ~/.config/wireplumber/wireplumber.conf.d/99-custom-j316-graph.conf && systemctl --user restart wireplumber`
+
+### Systemd User Services
+Services managed by this dotfiles repo:
+- `battery-monitor.service` - Battery level alerts
+- `sync-system-font.service` + `.path` - Automatic font synchronization
+- `figma-agent.service` - Local font server for Figma
+
+After modifying service files:
+```bash
+systemctl --user daemon-reload
+systemctl --user restart <service-name>
+```
+
+## Troubleshooting
+
+### Symlinks Not Working
+```bash
+# Check stow conflicts
+stow -n <package-name>  # Shows what would be linked
+stow -D <package-name>  # Remove existing links
+stow <package-name>     # Re-create links
+
+# Common issues:
+# 1. File exists but isn't a symlink - manually remove it first
+# 2. Parent directory doesn't exist - create it: mkdir -p ~/.config/<app>
+```
+
+### Hyprland Config Errors
+```bash
+# Check syntax errors
+hyprctl reload  # Shows error messages in terminal
+
+# Find which config file has the error
+hyprctl version
+hyprctl getoption <option-name>
+
+# Reset to defaults
+mv ~/.config/hypr ~/.config/hypr.backup
+stow -R hypr
+```
+
+### Theme Not Applying
+```bash
+# Verify theme symlink
+readlink ~/.config/omarchy/current/theme
+# Should point to: ~/.local/share/omarchy/themes/<theme-name>
+
+# Re-apply theme
+omarchy-theme-set <theme-name>
+
+# Manual theme reload
+hyprctl reload
+killall waybar && waybar &
+makoctl reload
+```
+
+### Audio Issues (Crackling/No Sound)
+```bash
+# Check PipeWire/WirePlumber status
+systemctl --user status pipewire wireplumber
+pw-top  # Monitor graph (q to quit)
+
+# Restart audio stack
+systemctl --user restart pipewire wireplumber
+
+# Revert to stock Asahi audio
+rm ~/.config/wireplumber/wireplumber.conf.d/99-custom-j316-graph.conf
+rm ~/.config/pipewire/pipewire.conf.d/50-quantum.conf
+systemctl --user restart wireplumber pipewire
+
+# Check audio devices
+wpctl status
+pactl list sinks
+```
+
+### Battery Monitor Not Working
+```bash
+# Verify service is running
+systemctl --user status battery-monitor
+
+# Check logs
+journalctl --user -u battery-monitor -n 50
+
+# Test UPower access
+upower -e  # List power devices
+upower -i /org/freedesktop/UPower/devices/battery_macsmc_battery
+
+# Manually trigger notification test
+notify-send "Test" "Battery notification test" -u critical
+```
+
+**Common issue: Crash loop when battery is charging**
+
+If you see rapid restarts in logs (service exiting immediately):
+```bash
+# Check restart counter in service status
+systemctl --user status battery-monitor
+# If restart counter is high (100+), the script is crash-looping
+
+# Root cause: grep fails when "time to empty" field doesn't exist (battery charging)
+# Solution: Ensure get_time_to_empty() has || true:
+grep -E "time to empty" ... || true
+
+# This was fixed in commit adding || true to line 56
+# Service should run continuously with 30s sleep cycles
+```
+
+### Figma Font/Trackpad Issues
+```bash
+# Check figma-agent service
+systemctl --user status figma-agent
+
+# Test font server
+curl http://localhost:18412/figma/font-files
+
+# Verify fonts in system directory
+ls /usr/share/fonts/TTF/
+
+# Check trackpad setting
+hyprctl getoption input:touchpad:disable_while_typing
+
+# Use basic launcher (no trackpad fix)
+figma-chromium
+```

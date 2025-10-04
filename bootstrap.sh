@@ -31,6 +31,8 @@ stow mise
 stow omarchy
 stow zed
 stow nvim
+stow starship
+stow brave
 # stow git
 
 # Special handling for Zed settings.json - copy instead of symlink

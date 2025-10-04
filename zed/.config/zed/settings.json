@@ -46,7 +46,7 @@
   "theme": {
     "mode": "system",
     "light": "Ayu Dark",
-    "dark": "Matte Black"
+    "dark": "Ayu Dark"
   },
   "active_pane_modifiers": {
     "border_size": 0.0,
