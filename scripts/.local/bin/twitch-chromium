@@ -1,0 +1,13 @@
+#!/bin/bash
+# Twitch launcher in Brave browser
+# Brave is Chromium-based and properly identifies itself to Twitch
+
+echo "Launching Twitch with Brave..."
+
+# Launch Twitch in Brave with dedicated profile
+exec brave \
+  --profile-directory="Twitch" \
+  --enable-features=UseOzonePlatform \
+  --ozone-platform=wayland \
+  --app="https://www.twitch.tv" \
+  "$@"

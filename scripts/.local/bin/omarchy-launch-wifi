@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# Force Alacritty terminal instead of $TERMINAL
+if pgrep -f "class.*Impala" >/dev/null; then
+  hyprctl dispatch focuswindow "class:Impala"
+else
+  /usr/bin/alacritty --class=Impala -e impala &
+fi

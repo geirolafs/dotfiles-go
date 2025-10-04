@@ -1,0 +1,15 @@
+[Unit]
+Description=Sync entire Dropbox/Sync folder (bidirectional)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/dropbox-sync-all
+StandardOutput=journal
+StandardError=journal
+# Prevent concurrent syncs
+LockPersonality=yes
+
+[Install]
+WantedBy=default.target

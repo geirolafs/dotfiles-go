@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+# Bidirectional sync of entire Dropbox/Sync folder
+# This syncs everything in ~/Dropbox/Sync/ to dropbox:Sync/ automatically
+
+set -euo pipefail
+
+REMOTE="dropbox:"
+REMOTE_PATH="Sync"
+LOCAL_PATH="$HOME/Dropbox/Sync"
+STATE_DIR="$HOME/.cache/rclone/bisync"
+
+# Check if rclone is configured
+if ! rclone listremotes | grep -q "^${REMOTE}$"; then
+    echo "✗ Dropbox remote not configured. Run: rclone config"
+    exit 1
+fi
+
+# Check network connectivity
+if ! ping -c 1 -W 2 8.8.8.8 &>/dev/null; then
+    echo "⚠ No network connection - skipping sync"
+    echo "  Files remain available locally at: $LOCAL_PATH"
+    exit 0
+fi
+
+# Create local directory if it doesn't exist
+mkdir -p "$LOCAL_PATH"
+mkdir -p "$STATE_DIR"
+
+# Check if this is first run (needs --resync)
+RESYNC_FLAG=""
+if [[ ! -f "$STATE_DIR/${REMOTE_PATH}.path1.lst" ]]; then
+    echo "→ First sync - performing initial resync"
+    RESYNC_FLAG="--resync"
+fi
+
+echo "→ Syncing Dropbox (bidirectional)..."
+echo "  Local:  $LOCAL_PATH"
+echo "  Remote: ${REMOTE}${REMOTE_PATH}"
+
+# Bidirectional sync with common exclusions
+rclone bisync "$LOCAL_PATH" "${REMOTE}${REMOTE_PATH}" \
+    $RESYNC_FLAG \
+    --exclude ".DS_Store" \
+    --exclude "*.tmp" \
+    --exclude "Thumbs.db" \
+    --exclude "*~" \
+    --exclude ".git/**" \
+    --exclude "node_modules/**" \
+    --exclude ".venv/**" \
+    --exclude "__pycache__/**" \
+    --exclude "*.pyc" \
+    --create-empty-src-dirs \
+    --compare size,modtime,checksum \
+    --slow-hash-sync-only \
+    --resilient \
+    --recover \
+    --conflict-resolve newer \
+    --conflict-loser num \
+    --conflict-suffix "sync-conflict" \
+    --max-lock 5m \
+    --log-level INFO
+
+# Get stats
+if [[ -d "$LOCAL_PATH" ]]; then
+    FOLDER_COUNT=$(find "$LOCAL_PATH" -mindepth 1 -maxdepth 1 -type d | wc -l)
+    TOTAL_SIZE=$(du -sh "$LOCAL_PATH" 2>/dev/null | cut -f1 || echo "unknown")
+
+    echo "✓ Sync completed"
+    echo "  Folders: $FOLDER_COUNT"
+    echo "  Size: $TOTAL_SIZE"
+    echo "  Path: $LOCAL_PATH"
+else
+    echo "✗ Sync failed - local directory not accessible"
+    exit 1
+fi

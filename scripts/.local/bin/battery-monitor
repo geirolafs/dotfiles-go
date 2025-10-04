@@ -53,7 +53,7 @@ get_battery_state() {
 
 # Get time to empty
 get_time_to_empty() {
-  upower -i "$BATTERY_PATH" | grep -E "time to empty" | awk -F: '{print $2}' | xargs
+  upower -i "$BATTERY_PATH" | grep -E "time to empty" | awk -F: '{print $2}' | xargs || true
 }
 
 # Send notification with appropriate urgency

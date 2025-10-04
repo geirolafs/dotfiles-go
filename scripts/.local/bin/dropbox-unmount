@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Unmount Dropbox
+
+set -euo pipefail
+
+MOUNT_DIR="$HOME/Dropbox/Mount"
+
+# Check if mounted
+if ! mountpoint -q "$MOUNT_DIR"; then
+    echo "✓ Dropbox is not mounted"
+    exit 0
+fi
+
+echo "→ Unmounting Dropbox..."
+
+# Try fusermount first (preferred method)
+if command -v fusermount3 &>/dev/null; then
+    fusermount3 -u "$MOUNT_DIR" 2>/dev/null || true
+elif command -v fusermount &>/dev/null; then
+    fusermount -u "$MOUNT_DIR" 2>/dev/null || true
+fi
+
+# Give it a moment
+sleep 1
+
+# Check if still mounted and try umount as fallback
+if mountpoint -q "$MOUNT_DIR"; then
+    umount "$MOUNT_DIR" 2>/dev/null || true
+fi
+
+# Final check
+if mountpoint -q "$MOUNT_DIR"; then
+    echo "✗ Failed to unmount Dropbox"
+    echo "  Try: fusermount -u $MOUNT_DIR"
+    exit 1
+else
+    echo "✓ Dropbox unmounted successfully"
+fi

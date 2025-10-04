@@ -50,6 +50,12 @@ NOTES.md
 !omarchy/.local/share/omarchy/
 !omarchy/.local/share/omarchy/themes/
 
+# Exception for custom scripts and rclone configs
+!scripts/.local/
+!scripts/.local/bin/
+!rclone/.local/
+!rclone/.local/bin/
+
 # Temporary patches
 *.patch.local
 *-temp.patch

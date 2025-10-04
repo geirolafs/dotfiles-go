@@ -1,0 +1,14 @@
+[Unit]
+Description=Sync Dropbox/Sync folder every 30 minutes
+After=network-online.target
+
+[Timer]
+# Run 5 minutes after boot
+OnBootSec=5min
+# Then every 30 minutes
+OnUnitActiveSec=30min
+# Persist timer across reboots
+Persistent=true
+
+[Install]
+WantedBy=timers.target

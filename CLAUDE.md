@@ -383,6 +383,20 @@ systemctl --user daemon-reload
 systemctl --user restart <service-name>
 ```
 
+### Waybar Script Changes
+**Important:** When modifying scripts that Waybar calls (like `omarchy-launch-wifi`, `omarchy-launch-bluetooth`), you **must restart Waybar** to clear its cache:
+
+```bash
+killall waybar && waybar &
+# Or use Hyprland reload (restarts all components)
+hyprctl reload
+```
+
+Scripts called by Waybar's `on-click`:
+- `omarchy-launch-wifi` - WiFi manager (Impala in Alacritty)
+- `omarchy-launch-bluetooth` - Bluetooth manager
+- Any custom Waybar module scripts
+
 ## Troubleshooting
 
 ### Symlinks Not Working
