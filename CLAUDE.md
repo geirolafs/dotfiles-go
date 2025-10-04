@@ -69,6 +69,48 @@ No modifications needed to the battery-monitor script during normal system updat
 
 Full mainline kernel support for all Apple Silicon features is projected for 2026-2027. Major milestones: Apple SMC driver merged (September 2025), GPU driver upstreaming dependent on Rust infrastructure (2026+). Continue using linux-asahi packages exclusively until the Asahi team announces mainstream kernel viability.
 
+### Audio Configuration
+
+Audio uses the `asahi-audio` package (v3.4+) which provides speaker-specific DSP processing via PipeWire filter chains. The configuration includes custom tweaks to address known audio quality issues.
+
+**Known Asahi Audio Issues (upstream bugs):**
+- Crackling/popping during audio start/stop and bass transients
+- "Trailing audio buffering" when switching sources
+- Naive bass enhancement algorithm
+- Potential distortion in 200Hz region
+- Excessive DSP chain latency
+
+**Custom configuration in this dotfiles repo:**
+
+1. **Reduced PipeWire Quantum** (`pipewire/.config/pipewire/pipewire.conf.d/50-quantum.conf`):
+   - Set to 128 frames @ 48kHz (~2.7ms latency) down from default 1024 frames (~21ms)
+   - Reduces crackling during audio transitions
+   - M1 Max has sufficient CPU headroom for this aggressive setting
+
+2. **EasyEffects Audio Enhancement** (`easyeffects/.config/easyeffects/output/MacBook_Pro_Enhanced.json`):
+   - 10-band EQ addressing frequency response issues
+   - Notch at 200Hz to reduce documented distortion
+   - Enhanced bass (cleaner than Asahi's Bankstown plugin)
+   - Reduced harsh treble (8kHz/16kHz)
+   - Limiter to smooth transients
+
+3. **Custom DSP Graphs** (`asahi-audio-custom/.local/share/asahi-audio-custom/j316/`):
+   - Simplified and minimal graph variants (experimental)
+   - Intended to bypass problematic Bankstown bass plugin
+   - **Status: May not be loading** - requires sudo to disable system config
+
+**Remaining Issues:**
+- Crackling persists despite all optimizations, suggesting deep driver/DSP issue
+- May require waiting for upstream Asahi audio improvements
+- Alternative: Use headphones/external DAC to bypass onboard DSP entirely
+
+**To disable custom audio config:**
+```bash
+# Revert to stock Asahi audio
+rm ~/.config/wireplumber/wireplumber.conf.d/99-custom-j316-graph.conf
+systemctl --user restart wireplumber
+```
+
 ## Commands
 
 ### Deployment
