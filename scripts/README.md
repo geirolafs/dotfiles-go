@@ -37,7 +37,7 @@ systemctl --user disable battery-monitor
 
 **Configuration:**
 
-Edit thresholds in `/home/go/.local/bin/battery-monitor`:
+Edit thresholds in `~/.local/bin/battery-monitor`:
 ```bash
 readonly CRITICAL_THRESHOLD=5   # Default: 5%
 readonly LOW_THRESHOLD=10       # Default: 10%
@@ -94,10 +94,10 @@ stow scripts
 ```
 
 This creates symlinks:
-- `~/.local/bin/battery-monitor` → `/home/go/.dotfiles/scripts/.local/bin/battery-monitor`
-- `~/.local/bin/keyboard-backlight-swayidle.sh` → `/home/go/.dotfiles/scripts/.local/bin/keyboard-backlight-swayidle.sh`
-- `~/.local/bin/sync-system-font` → `/home/go/.dotfiles/scripts/.local/bin/sync-system-font`
-- `~/.config/systemd/user/battery-monitor.service` → `/home/go/.dotfiles/scripts/.config/systemd/user/battery-monitor.service`
+- `~/.local/bin/battery-monitor` → `~/.dotfiles/scripts/.local/bin/battery-monitor`
+- `~/.local/bin/keyboard-backlight-swayidle.sh` → `~/.dotfiles/scripts/.local/bin/keyboard-backlight-swayidle.sh`
+- `~/.local/bin/sync-system-font` → `~/.dotfiles/scripts/.local/bin/sync-system-font`
+- `~/.config/systemd/user/battery-monitor.service` → `~/.dotfiles/scripts/.config/systemd/user/battery-monitor.service`
 
 After stowing, enable the battery monitor:
 ```bash
@@ -155,4 +155,4 @@ These scripts are optimized for MacBook Pro on Asahi Linux:
 - Keyboard backlight device: `kbd_backlight` (Apple keyboard)
 - Display backlight: `apple-panel-bl` (use brightnessctl for display)
 
-For more Mac-specific configuration, see `/home/go/.dotfiles/CLAUDE.md`.
+For more Mac-specific configuration, see `~/.dotfiles/CLAUDE.md`.

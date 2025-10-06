@@ -32,6 +32,9 @@ stow omarchy
 stow nvim
 stow starship
 stow brave
+stow chromium
+stow lazygit
+stow lazydocker
 # stow git
 
 echo "Done. Symlinks created. 🎉"

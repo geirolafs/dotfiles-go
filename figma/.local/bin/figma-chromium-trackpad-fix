@@ -26,13 +26,15 @@ trap cleanup EXIT INT TERM
 echo "Creating temporary input configuration for Figma..."
 cp "$ORIGINAL_INPUT_CONF" "$TEMP_INPUT_CONF"
 
-# Add disable_while_typing = false to the touchpad section
-sed -i '/touchpad {/,/}/ {
-    /tap-to-click = false/a\
+# Add disable_while_typing = false to the touchpad section (only if not already present)
+if ! grep -q "Temporarily disabled for Figma space bar hand tool" "$ORIGINAL_INPUT_CONF"; then
+    sed -i '/touchpad {/,/}/ {
+        /tap-to-click = false/a\
 \
     # Temporarily disabled for Figma space bar hand tool\
     disable_while_typing = false
-}' "$ORIGINAL_INPUT_CONF"
+    }' "$ORIGINAL_INPUT_CONF"
+fi
 
 # Reload Hyprland configuration
 echo "Reloading Hyprland with Figma-friendly input settings..."

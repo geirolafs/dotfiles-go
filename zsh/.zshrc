@@ -50,4 +50,4 @@ setopt PROMPT_SP
 export PROMPT_EOL_MARK=""
 
 # . "$HOME/.local/share/../bin/env"  # Commented out - file doesn't exist
-export PATH="/home/go/.cache/.bun/bin:$PATH"
+export PATH="$HOME/.cache/.bun/bin:$PATH"

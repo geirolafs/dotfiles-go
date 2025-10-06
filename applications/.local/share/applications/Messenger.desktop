@@ -2,10 +2,10 @@
 Version=1.0
 Name=Messenger
 Comment=Facebook Messenger - Chat with friends
-Exec=/home/go/.local/bin/messenger-chromium
+Exec=$HOME/.local/bin/messenger-chromium
 Terminal=false
 Type=Application
-Icon=/home/go/.local/share/applications/icons/Messenger.svg
+Icon=$HOME/.local/share/applications/icons/Messenger.svg
 Categories=Network;InstantMessaging;
 StartupNotify=true
 StartupWMClass=chromium

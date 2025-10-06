@@ -255,6 +255,7 @@ Themes are stored in `omarchy/.local/share/omarchy/themes/<theme-name>/`:
 - `zsh/` - Shell configuration
 - `starship/` - Shell prompt configuration (`.config/starship.toml`)
 - `brave/` - Brave browser Wayland flags (`.config/brave-flags.conf`)
+- `chromium/` - Chromium browser Wayland flags (`.config/chromium-flags.conf`)
 
 **Utility modules**:
 - `omarchy/` - Theme files (`.local/share/omarchy/themes/`) and theme management scripts (`.local/share/omarchy/bin/omarchy-theme-set`)
@@ -271,9 +272,12 @@ Themes are stored in `omarchy/.local/share/omarchy/themes/<theme-name>/`:
   - `dropbox-sync-all`, `dropbox-sync-fonts` - Sync utilities
 - `gtk/` - GTK3/4 configurations (bookmarks, mimeapps)
 - `systemd/` - User systemd services and environment configs:
-  - Services: `battery-monitor`, `sync-system-font`, `figma-agent`, `dropbox-sync-all`
+  - Services: `sync-system-font.service` + `.path`
   - Environment: `asahi-gpu.conf` (GPU/Vulkan paths for ARM64)
+  - Note: Other services live in their app modules (figma-agent in figma/, dropbox-sync-all in rclone/)
 - `yazi/` - Terminal file manager (yazi.toml, keymap.toml)
+- `lazygit/` - Git TUI (config.yml placeholder for future customization)
+- `lazydocker/` - Docker TUI (config.yml placeholder for future customization)
 - `mise/` - Runtime version manager
 - `fastfetch/` - System info tool
 - `applications/` - .desktop entries for app launcher
@@ -383,10 +387,10 @@ When a setting appears in multiple places, the priority order is:
 - Revert to stock: `rm ~/.config/wireplumber/wireplumber.conf.d/99-custom-j316-graph.conf && systemctl --user restart wireplumber`
 
 ### Systemd User Services
-Services managed by this dotfiles repo:
-- `battery-monitor.service` - Battery level alerts
-- `sync-system-font.service` + `.path` - Automatic font synchronization
-- `figma-agent.service` - Local font server for Figma
+Services managed by this dotfiles repo (organized by module):
+- `systemd/` - `sync-system-font.service` + `.path` - Automatic font synchronization
+- `figma/` - `figma-agent.service` + `.socket` - Local font server for Figma
+- `rclone/` - `dropbox-sync-all.service` + `.timer` - Periodic Dropbox sync (every 30 minutes)
 
 After modifying service files:
 ```bash
