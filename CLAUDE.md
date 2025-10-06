@@ -122,6 +122,7 @@ systemctl --user restart wireplumber
 stow hypr waybar nvim    # Deploy multiple modules
 stow -D hypr             # Remove Hyprland configs
 stow -n hypr             # Test without creating symlinks
+stow -R hypr             # Re-stow (remove and recreate symlinks)
 ```
 
 ### Theme Management
@@ -129,6 +130,7 @@ stow -n hypr             # Test without creating symlinks
 # Switch themes (applies to all apps: Hyprland, terminals, browsers, editors)
 omarchy-theme-set <theme-name>
 
+# Available themes: go, go-matt-blk
 # Theme files are in omarchy/.local/share/omarchy/themes/
 # Current theme symlinked at ~/.config/omarchy/current/theme/
 ```
@@ -155,6 +157,12 @@ upower -i /org/freedesktop/UPower/devices/battery_macsmc_battery
 # Keyboard backlight control
 brightnessctl --device=kbd_backlight set 50%
 brightnessctl --device=kbd_backlight get
+
+# Dropbox/cloud storage (via rclone)
+dropbox-mount              # Mount Dropbox via rclone
+dropbox-unmount            # Unmount Dropbox
+dropbox-sync-all           # Sync all Dropbox content
+dropbox-sync-fonts         # Sync fonts from Dropbox
 ```
 
 ### Debugging and Testing
@@ -245,6 +253,8 @@ Themes are stored in `omarchy/.local/share/omarchy/themes/<theme-name>/`:
   - Plugins: `lua/plugins/` (claude-integration, editor-extras, language-extras, theme, web-development, which-key-extras)
 - `ghostty/`, `alacritty/` - Terminal emulators (TOML configs)
 - `zsh/` - Shell configuration
+- `starship/` - Shell prompt configuration (`.config/starship.toml`)
+- `brave/` - Brave browser Wayland flags (`.config/brave-flags.conf`)
 
 **Utility modules**:
 - `omarchy/` - Theme files (`.local/share/omarchy/themes/`) and theme management scripts (`.local/share/omarchy/bin/omarchy-theme-set`)
@@ -253,13 +263,17 @@ Themes are stored in `omarchy/.local/share/omarchy/themes/<theme-name>/`:
   - `sync-system-font` - Alacritty → GTK font sync
   - `keyboard-backlight-swayidle.sh` - Auto-off backlight after 10s idle
   - `omarchy-launch-wifi`, `omarchy-launch-bluetooth` - Network utilities
-  - `dropbox-mount`, `dropbox-unmount` - Cloud storage
+  - `twitch-chromium` - Twitch launcher with Chromium
   - `restore-volume.sh` - Volume restoration
-- `figma/` - Figma launcher with Asahi workarounds (trackpad fix, font access)
+- `figma/` - Figma launcher with Asahi workarounds (trackpad fix, font access via local font server)
+- `rclone/` - Cloud storage (Dropbox) sync via rclone:
+  - `dropbox-mount`, `dropbox-unmount` - Mount/unmount operations
+  - `dropbox-sync-all`, `dropbox-sync-fonts` - Sync utilities
 - `gtk/` - GTK3/4 configurations (bookmarks, mimeapps)
-- `systemd/` - User systemd services (battery-monitor, sync-system-font, figma-agent)
+- `systemd/` - User systemd services and environment configs:
+  - Services: `battery-monitor`, `sync-system-font`, `figma-agent`, `dropbox-sync-all`
+  - Environment: `asahi-gpu.conf` (GPU/Vulkan paths for ARM64)
 - `yazi/` - Terminal file manager (yazi.toml, keymap.toml)
-- `rclone/` - Cloud storage sync config
 - `mise/` - Runtime version manager
 - `fastfetch/` - System info tool
 - `applications/` - .desktop entries for app launcher

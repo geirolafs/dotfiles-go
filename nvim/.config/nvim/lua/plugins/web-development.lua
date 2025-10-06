@@ -212,28 +212,19 @@ return {
 	{
 		"mason-org/mason.nvim",
 		opts = function(_, opts)
+			-- Note: Most LSP servers are auto-installed by LazyVim extras (see language-extras.lua)
+			-- Only list packages here that are NOT provided by LazyVim extras to avoid race conditions
 			vim.list_extend(opts.ensure_installed, {
-				-- Language Servers
-				"typescript-language-server",
-				"tailwindcss-language-server",
-				"css-lsp",
-				"json-lsp",
-				"emmet-ls",
-				"eslint-lsp",
+				-- Custom formatters (not in LazyVim extras)
+				"biome", -- Rust-based formatter for JS/TS (faster than Prettier)
+				"stylua", -- Lua formatter
 
-				-- Formatters & Linters
-				"biome",
-				"prettier",
-				"stylua",
-
-				-- Debug Adapters
+				-- Debug adapters (not in LazyVim extras)
 				"js-debug-adapter",
 
-				-- Additional CSS/PostCSS tools
-				"stylelint-lsp",
-
-				-- Additional tools
-				"yaml-language-server",
+				-- Additional linting/tools (not in LazyVim extras)
+				"stylelint-lsp", -- CSS/SCSS linting
+				"yaml-language-server", -- YAML support
 			})
 		end,
 	},

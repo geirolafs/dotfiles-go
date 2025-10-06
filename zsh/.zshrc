@@ -29,10 +29,10 @@ alias docs='cd ~/Documents/ && l'
 alias y='yazi'
 dev() {
   case "$1" in
-    go) cd ~/Development/go/ && l ;;
-    www) cd ~/Development/go/www/ && l ;;
-    prj) cd ~/Development/projects/ && l ;;
-    *) cd ~/Development/ && l ;;
+    go) cd ~/Developer/go/ && l ;;
+    www) cd ~/Developer/go/www/ && l ;;
+    prj) cd ~/Developer/projects/ && l ;;
+    *) cd ~/Developer/ && l ;;
   esac
 }
 
@@ -49,5 +49,5 @@ setopt HIST_REDUCE_BLANKS
 setopt PROMPT_SP
 export PROMPT_EOL_MARK=""
 
-. "$HOME/.local/share/../bin/env"
+# . "$HOME/.local/share/../bin/env"  # Commented out - file doesn't exist
 export PATH="/home/go/.cache/.bun/bin:$PATH"

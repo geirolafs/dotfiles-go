@@ -5,7 +5,7 @@ After=network-online.target
 
 [Service]
 Type=exec
-ExecStart=/home/go/.local/bin/figma-agent
+ExecStart=%h/.local/bin/figma-agent
 
 [Install]
 WantedBy=default.target

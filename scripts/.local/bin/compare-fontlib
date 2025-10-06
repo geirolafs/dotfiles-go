@@ -1,0 +1,161 @@
+#!/usr/bin/env bash
+# Compare font libraries to find missing fonts
+
+set -euo pipefail
+
+OLD_LIB="$HOME/Dropbox/Sync/fontlib"
+NEW_LIB="$HOME/Dropbox/Sync/Fontfiles"
+REPORT_FILE="/tmp/compare-fontlib-report.txt"
+
+# Parse options
+VERBOSE=false
+if [[ "${1:-}" == "-v" ]] || [[ "${1:-}" == "--verbose" ]]; then
+    VERBOSE=true
+fi
+
+# Check if directories exist
+if [[ ! -d "$OLD_LIB" ]]; then
+    echo "✗ Old library not found: $OLD_LIB"
+    exit 1
+fi
+
+if [[ ! -d "$NEW_LIB" ]]; then
+    echo "✗ New library not found: $NEW_LIB"
+    exit 1
+fi
+
+echo "→ Comparing font libraries..."
+echo "  Old: $OLD_LIB"
+echo "  New: $NEW_LIB"
+echo ""
+
+# Find all fonts with full paths
+echo "→ Scanning directories..."
+TMP_OLD_PATHS="/tmp/compare-fontlib-old-paths.txt"
+TMP_OLD_NAMES="/tmp/compare-fontlib-old-names.txt"
+TMP_NEW="/tmp/compare-fontlib-new.txt"
+TMP_MISSING="/tmp/compare-fontlib-missing.txt"
+
+# Find old fonts with full paths
+find "$OLD_LIB" -type f \( -name "*.ttf" -o -name "*.otf" -o -name "*.woff" -o -name "*.woff2" \) 2>/dev/null > "$TMP_OLD_PATHS"
+
+# Extract just basenames from old fonts (sorted)
+awk -F'/' '{print $NF}' "$TMP_OLD_PATHS" | sort > "$TMP_OLD_NAMES"
+
+# Find new fonts basenames (sorted)
+find "$NEW_LIB" -type f \( -name "*.ttf" -o -name "*.otf" -o -name "*.woff" -o -name "*.woff2" \) -exec basename {} \; 2>/dev/null | sort > "$TMP_NEW"
+
+OLD_COUNT=$(wc -l < "$TMP_OLD_PATHS")
+NEW_COUNT=$(wc -l < "$TMP_NEW")
+
+echo "  Found $OLD_COUNT fonts in fontlib"
+echo "  Found $NEW_COUNT unique font names in Fontfiles"
+
+# Check if we have fonts to compare
+if [[ $OLD_COUNT -eq 0 ]]; then
+    echo "✗ No fonts found in fontlib"
+    rm -f "$TMP_OLD_PATHS" "$TMP_OLD_NAMES" "$TMP_NEW"
+    exit 1
+fi
+
+if [[ $NEW_COUNT -eq 0 ]]; then
+    echo "✗ No fonts found in Fontfiles"
+    rm -f "$TMP_OLD_PATHS" "$TMP_OLD_NAMES" "$TMP_NEW"
+    exit 1
+fi
+
+echo "→ Analyzing missing fonts..."
+
+# Use comm to find fonts in old but not in new (much faster!)
+comm -23 "$TMP_OLD_NAMES" "$TMP_NEW" > "$TMP_MISSING"
+
+MISSING_COUNT=$(wc -l < "$TMP_MISSING")
+
+if [[ $MISSING_COUNT -eq 0 ]]; then
+    echo ""
+    echo "✓ All fonts from fontlib are present in Fontfiles"
+    rm -f "$TMP_OLD_PATHS" "$TMP_OLD_NAMES" "$TMP_NEW" "$TMP_MISSING"
+    exit 0
+fi
+
+# Create report and count by directory
+> "$REPORT_FILE"
+declare -A DIR_COUNTS
+
+# For each missing font, find its original path and write to report
+echo -n "  Processing $MISSING_COUNT missing fonts"
+PROCESSED=0
+while IFS= read -r missing_font; do
+    [[ -z "$missing_font" ]] && continue
+
+    # Show progress every 100 fonts
+    PROCESSED=$((PROCESSED + 1))
+    if [[ $((PROCESSED % 100)) -eq 0 ]]; then
+        echo -n "."
+    fi
+
+    # Find the path(s) for this font in old library
+    grep -F "/${missing_font}" "$TMP_OLD_PATHS" | while IFS= read -r font_path; do
+        rel_path=$(dirname "${font_path#$OLD_LIB/}")
+        echo "$missing_font|$rel_path" >> "$REPORT_FILE"
+    done
+done < "$TMP_MISSING"
+echo " done"
+
+echo "  Building category summary..."
+
+# Now read report to build counts
+declare -A DIR_COUNTS
+while IFS='|' read -r font_name dir_path; do
+    if [[ -z "${DIR_COUNTS[$dir_path]:-}" ]]; then
+        DIR_COUNTS["$dir_path"]=1
+    else
+        DIR_COUNTS["$dir_path"]=$((DIR_COUNTS["$dir_path"] + 1))
+    fi
+done < "$REPORT_FILE"
+
+echo ""
+
+# Cleanup temp files
+rm -f "$TMP_OLD_PATHS" "$TMP_OLD_NAMES" "$TMP_NEW" "$TMP_MISSING"
+
+# Display results (we know there are missing fonts if we got here)
+echo "⚠ Missing fonts by category:"
+echo ""
+
+# Sort directories by count (descending)
+while IFS= read -r line; do
+    count=$(echo "$line" | awk '{print $1}')
+    dir=$(echo "$line" | cut -d' ' -f2-)
+    printf "  %-50s %4d fonts\n" "$dir" "$count"
+done < <(for dir in "${!DIR_COUNTS[@]}"; do
+    echo "${DIR_COUNTS[$dir]} $dir"
+done | sort -rn)
+
+echo ""
+echo "📄 Detailed report saved to: $REPORT_FILE"
+
+if [[ "$VERBOSE" == true ]]; then
+    echo ""
+    echo "Missing fonts:"
+    echo "─────────────────────────────────────────────────────────────"
+    sort "$REPORT_FILE" -t'|' -k2,2 -k1,1 | while IFS='|' read -r font_name dir_path; do
+        printf "  %-60s [%s]\n" "$font_name" "$dir_path"
+    done
+else
+    echo ""
+    echo "Tip: Run with -v or --verbose to see full list"
+fi
+
+# Summary (reuse counts from earlier)
+
+echo ""
+echo "═══════════════════════════════════════════════════════════════"
+echo "Summary:"
+echo "  fontlib:        $OLD_COUNT fonts"
+echo "  Fontfiles:      $NEW_COUNT fonts"
+echo "  Missing:        $MISSING_COUNT fonts"
+echo "  Duplicates:     $((NEW_COUNT - OLD_COUNT + MISSING_COUNT)) fonts (same name, different location)"
+echo "═══════════════════════════════════════════════════════════════"
+
+exit 1

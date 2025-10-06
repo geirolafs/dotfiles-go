@@ -2,7 +2,7 @@
 config-file = ?"~/.config/omarchy/current/theme/ghostty.conf"
 
 # Font
-font-family = "SF Mono"
+font-family = "JetBrainsMonoNL Nerd Font"
 font-style = Regular
 font-size = 9
 
@@ -19,4 +19,3 @@ shell-integration-features = no-cursor
 
 # Keyboard bindings
 keybind = f11=toggle_fullscreen
-keybind = shift+enter=text:\x1b\r

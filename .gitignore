@@ -69,3 +69,9 @@ omarchy-mac-comparison.md
 
 # PID files
 *.pid
+
+# rclone configs (contain OAuth tokens)
+rclone/.config/rclone/rclone.conf
+
+# Temporary figma input configs
+hypr/.config/hypr/*.figma.tmp

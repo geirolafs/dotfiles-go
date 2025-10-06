@@ -1,0 +1,365 @@
+#!/usr/bin/env bash
+# Remove duplicate fonts from Fontfiles directory
+
+set -euo pipefail
+
+FONTFILES_DIR="$HOME/Dropbox/Sync/Fontfiles"
+TMP_ALL_FONTS="/tmp/remove-dupes-all.txt"
+TMP_DUPES="/tmp/remove-dupes-duplicates.txt"
+
+# Parse options
+DRY_RUN=false
+AUTO_MODE=false
+KEEP_STRATEGY="newest"  # newest, largest, oldest, smallest
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --dry-run|-n)
+            DRY_RUN=true
+            shift
+            ;;
+        --auto|-a)
+            AUTO_MODE=true
+            shift
+            ;;
+        --keep-newest)
+            KEEP_STRATEGY="newest"
+            shift
+            ;;
+        --keep-largest)
+            KEEP_STRATEGY="largest"
+            shift
+            ;;
+        --keep-oldest)
+            KEEP_STRATEGY="oldest"
+            shift
+            ;;
+        --keep-smallest)
+            KEEP_STRATEGY="smallest"
+            shift
+            ;;
+        --keep-shallowest)
+            KEEP_STRATEGY="shallowest"
+            shift
+            ;;
+        --keep-deepest)
+            KEEP_STRATEGY="deepest"
+            shift
+            ;;
+        --help|-h)
+            echo "Usage: remove-duplicate-fonts [OPTIONS]"
+            echo ""
+            echo "Remove duplicate fonts from Fontfiles directory"
+            echo ""
+            echo "Options:"
+            echo "  --dry-run, -n       Show what would be deleted without deleting"
+            echo "  --auto, -a          Automatically process all duplicates (use with --keep-*)"
+            echo ""
+            echo "Auto mode strategies:"
+            echo "  --keep-newest       Keep newest file (default)"
+            echo "  --keep-oldest       Keep oldest file"
+            echo "  --keep-largest      Keep largest file"
+            echo "  --keep-smallest     Keep smallest file"
+            echo "  --keep-shallowest   Keep file closest to root (fewest path segments)"
+            echo "  --keep-deepest      Keep file furthest from root (most path segments)"
+            echo ""
+            echo "  -h, --help          Show this help"
+            echo ""
+            echo "Interactive mode (default):"
+            echo "  Asks which copy to keep for each duplicate"
+            echo ""
+            echo "Safety:"
+            echo "  Files are moved to Trash (~/.local/share/Trash/)"
+            echo "  Recoverable via file manager or: gio trash --restore"
+            echo ""
+            echo "Examples:"
+            echo "  remove-duplicate-fonts                        # Interactive mode"
+            echo "  remove-duplicate-fonts --dry-run              # Preview changes"
+            echo "  remove-duplicate-fonts --auto                 # Keep newest automatically"
+            echo "  remove-duplicate-fonts --auto --keep-oldest   # Keep oldest automatically"
+            echo "  remove-duplicate-fonts --auto --keep-largest  # Keep largest files"
+            echo "  remove-duplicate-fonts --auto --keep-shallowest  # Keep files closest to root"
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Run with --help for usage"
+            exit 1
+            ;;
+    esac
+done
+
+# Check if directory exists
+if [[ ! -d "$FONTFILES_DIR" ]]; then
+    echo "✗ Fontfiles directory not found: $FONTFILES_DIR"
+    exit 1
+fi
+
+# Check if gio trash is available
+if ! command -v gio &>/dev/null; then
+    echo "✗ 'gio' command not found (needed for trash functionality)"
+    echo "  Install: sudo pacman -S glib2"
+    exit 1
+fi
+
+echo "→ Finding duplicate fonts in Fontfiles..."
+echo ""
+
+# Find all fonts with full paths and metadata
+find "$FONTFILES_DIR" -type f \( -name "*.ttf" -o -name "*.otf" -o -name "*.woff" -o -name "*.woff2" \) -printf "%p|%s|%T@\n" 2>/dev/null > "$TMP_ALL_FONTS"
+
+TOTAL_FONTS=$(wc -l < "$TMP_ALL_FONTS")
+echo "  Found $TOTAL_FONTS fonts total"
+
+# Group by basename and find duplicates
+> "$TMP_DUPES"
+declare -A SEEN_BASENAMES
+
+while IFS='|' read -r full_path size mtime; do
+    basename_font=$(basename "$full_path")
+
+    if [[ -n "${SEEN_BASENAMES[$basename_font]:-}" ]]; then
+        # This is a duplicate
+        echo "$basename_font" >> "$TMP_DUPES"
+        SEEN_BASENAMES["$basename_font"]="${SEEN_BASENAMES[$basename_font]}"$'\n'"$full_path|$size|$mtime"
+    else
+        # First occurrence
+        SEEN_BASENAMES["$basename_font"]="$full_path|$size|$mtime"
+    fi
+done < "$TMP_ALL_FONTS"
+
+# Count unique duplicate names
+DUPE_NAMES=$(sort -u "$TMP_DUPES" | wc -l)
+
+if [[ $DUPE_NAMES -eq 0 ]]; then
+    echo "✓ No duplicates found!"
+    rm -f "$TMP_ALL_FONTS" "$TMP_DUPES"
+    exit 0
+fi
+
+# Count total duplicate files
+TOTAL_DUPES=0
+for basename_font in "${!SEEN_BASENAMES[@]}"; do
+    count=$(echo "${SEEN_BASENAMES[$basename_font]}" | grep -c '|')
+    if [[ $count -gt 1 ]]; then
+        TOTAL_DUPES=$((TOTAL_DUPES + count))
+    fi
+done
+
+echo "  Found $DUPE_NAMES duplicate font names across $TOTAL_DUPES files"
+echo ""
+
+if [[ "$DRY_RUN" == true ]]; then
+    echo "🔍 DRY RUN MODE - No files will be deleted"
+    echo ""
+fi
+
+# Process each duplicate
+DELETED_COUNT=0
+KEPT_COUNT=0
+SKIPPED_COUNT=0
+
+for basename_font in $(sort -u "$TMP_DUPES"); do
+    # Get all copies of this font
+    copies="${SEEN_BASENAMES[$basename_font]}"
+
+    # Count copies
+    copy_count=$(echo "$copies" | grep -c '|')
+
+    if [[ $copy_count -le 1 ]]; then
+        continue
+    fi
+
+    echo "════════════════════════════════════════════════════════════════"
+    echo "⚠ Duplicate: \"$basename_font\" ($copy_count copies)"
+    echo ""
+
+    # Parse and display copies
+    declare -a paths=()
+    declare -a sizes=()
+    declare -a mtimes=()
+    declare -a depths=()
+
+    idx=1
+    while IFS='|' read -r path size mtime; do
+        [[ -z "$path" ]] && continue
+
+        paths+=("$path")
+        sizes+=("$size")
+        mtimes+=("$mtime")
+
+        # Calculate path depth (number of slashes after FONTFILES_DIR)
+        rel_path="${path#$FONTFILES_DIR/}"
+        depth=$(echo "$rel_path" | tr -cd '/' | wc -c)
+        depths+=("$depth")
+
+        # Format size
+        if [[ $size -gt 1048576 ]]; then
+            size_mb=$((size / 1048576))
+            size_fmt="${size_mb}MB"
+        elif [[ $size -gt 1024 ]]; then
+            size_kb=$((size / 1024))
+            size_fmt="${size_kb}KB"
+        else
+            size_fmt="${size}B"
+        fi
+
+        # Format date
+        date_fmt=$(date -d "@$mtime" "+%Y-%m-%d %H:%M" 2>/dev/null || echo "unknown")
+
+        printf "  [%d] %s\n" "$idx" "$rel_path"
+        printf "      Size: %s | Modified: %s | Depth: %d\n" "$size_fmt" "$date_fmt" "$depth"
+
+        ((idx++))
+    done <<< "$copies"
+
+    echo ""
+
+    # Decide which to keep
+    if [[ "$AUTO_MODE" == true ]]; then
+        # Auto mode - find best copy
+        if [[ "$KEEP_STRATEGY" == "newest" ]]; then
+            # Keep newest (highest mtime)
+            keep_idx=1
+            max_mtime="${mtimes[0]}"
+            for i in "${!mtimes[@]}"; do
+                # Convert float to integer for comparison (remove decimal)
+                curr_mtime_int=$(echo "${mtimes[$i]}" | cut -d. -f1)
+                max_mtime_int=$(echo "$max_mtime" | cut -d. -f1)
+                if [[ $curr_mtime_int -gt $max_mtime_int ]]; then
+                    max_mtime="${mtimes[$i]}"
+                    keep_idx=$((i + 1))
+                fi
+            done
+        elif [[ "$KEEP_STRATEGY" == "oldest" ]]; then
+            # Keep oldest (lowest mtime)
+            keep_idx=1
+            min_mtime="${mtimes[0]}"
+            for i in "${!mtimes[@]}"; do
+                # Convert float to integer for comparison (remove decimal)
+                curr_mtime_int=$(echo "${mtimes[$i]}" | cut -d. -f1)
+                min_mtime_int=$(echo "$min_mtime" | cut -d. -f1)
+                if [[ $curr_mtime_int -lt $min_mtime_int ]]; then
+                    min_mtime="${mtimes[$i]}"
+                    keep_idx=$((i + 1))
+                fi
+            done
+        elif [[ "$KEEP_STRATEGY" == "largest" ]]; then
+            # Keep largest
+            keep_idx=1
+            max_size="${sizes[0]}"
+            for i in "${!sizes[@]}"; do
+                if [[ ${sizes[$i]} -gt $max_size ]]; then
+                    max_size="${sizes[$i]}"
+                    keep_idx=$((i + 1))
+                fi
+            done
+        elif [[ "$KEEP_STRATEGY" == "smallest" ]]; then
+            # Keep smallest
+            keep_idx=1
+            min_size="${sizes[0]}"
+            for i in "${!sizes[@]}"; do
+                if [[ ${sizes[$i]} -lt $min_size ]]; then
+                    min_size="${sizes[$i]}"
+                    keep_idx=$((i + 1))
+                fi
+            done
+        elif [[ "$KEEP_STRATEGY" == "shallowest" ]]; then
+            # Keep shallowest (fewest slashes in path)
+            keep_idx=1
+            min_depth="${depths[0]}"
+            for i in "${!depths[@]}"; do
+                if [[ ${depths[$i]} -lt $min_depth ]]; then
+                    min_depth="${depths[$i]}"
+                    keep_idx=$((i + 1))
+                fi
+            done
+        elif [[ "$KEEP_STRATEGY" == "deepest" ]]; then
+            # Keep deepest (most slashes in path)
+            keep_idx=1
+            max_depth="${depths[0]}"
+            for i in "${!depths[@]}"; do
+                if [[ ${depths[$i]} -gt $max_depth ]]; then
+                    max_depth="${depths[$i]}"
+                    keep_idx=$((i + 1))
+                fi
+            done
+        fi
+
+        echo "  → Auto mode: keeping copy $keep_idx (${KEEP_STRATEGY})"
+    else
+        # Interactive mode
+        while true; do
+            read -p "  Keep which copy? [1-$copy_count/all/skip] (default: 1): " choice
+            choice=${choice:-1}
+
+            if [[ "$choice" == "skip" ]] || [[ "$choice" == "s" ]]; then
+                echo "  → Skipped"
+                SKIPPED_COUNT=$((SKIPPED_COUNT + 1))
+                echo ""
+                continue 2  # Continue outer loop
+            fi
+
+            if [[ "$choice" == "all" ]] || [[ "$choice" == "a" ]]; then
+                echo "  → Keeping all copies"
+                KEPT_COUNT=$((KEPT_COUNT + copy_count))
+                echo ""
+                continue 2  # Continue outer loop
+            fi
+
+            # Validate numeric input
+            if [[ "$choice" =~ ^[0-9]+$ ]] && [[ $choice -ge 1 ]] && [[ $choice -le $copy_count ]]; then
+                keep_idx=$choice
+                break
+            else
+                echo "  ✗ Invalid choice. Please enter a number between 1 and $copy_count, 'all', or 'skip'"
+            fi
+        done
+    fi
+
+    # Delete all except the one to keep
+    for i in "${!paths[@]}"; do
+        idx=$((i + 1))
+
+        if [[ $idx -eq $keep_idx ]]; then
+            echo "  ✓ Keeping: ${paths[$i]#$FONTFILES_DIR/}"
+            KEPT_COUNT=$((KEPT_COUNT + 1))
+        else
+            if [[ "$DRY_RUN" == true ]]; then
+                echo "  🗑  Would delete: ${paths[$i]#$FONTFILES_DIR/}"
+            else
+                echo "  🗑  Deleting: ${paths[$i]#$FONTFILES_DIR/}"
+                if gio trash "${paths[$i]}" 2>/dev/null; then
+                    DELETED_COUNT=$((DELETED_COUNT + 1))
+                else
+                    echo "     ✗ Failed to trash file"
+                fi
+            fi
+        fi
+    done
+
+    echo ""
+
+    # Clear arrays for next iteration
+    unset paths sizes mtimes depths
+done
+
+# Cleanup
+rm -f "$TMP_ALL_FONTS" "$TMP_DUPES"
+
+# Summary
+echo "════════════════════════════════════════════════════════════════"
+echo "Summary:"
+
+if [[ "$DRY_RUN" == true ]]; then
+    echo "  Would delete:  $TOTAL_DUPES files"
+    echo "  Would keep:    $KEPT_COUNT files"
+else
+    echo "  Deleted:       $DELETED_COUNT files (moved to Trash)"
+    echo "  Kept:          $KEPT_COUNT files"
+    echo "  Skipped:       $SKIPPED_COUNT duplicates"
+    echo ""
+    echo "💡 Recover deleted files:"
+    echo "   File manager → Trash, or: gio trash --list"
+fi
+echo "════════════════════════════════════════════════════════════════"

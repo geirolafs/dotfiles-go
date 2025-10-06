@@ -14,4 +14,4 @@ path=(
   $path
 )
 export PATH
-. "$HOME/.cargo/env"
+[ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
