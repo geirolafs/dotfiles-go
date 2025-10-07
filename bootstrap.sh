@@ -35,6 +35,7 @@ stow brave
 stow chromium
 stow lazygit
 stow lazydocker
+stow walker
 # stow git
 
 echo "Done. Symlinks created. 🎉"

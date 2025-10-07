@@ -1,0 +1,139 @@
+{
+	"name": "omarchy-gov2-theme",
+	"created_at": "2025-10-07T14:00:00.000000000+00:00",
+	"modified_at": "2025-10-07T14:00:00.000000000+00:00",
+	"apps": {
+		"alacritty": {
+			"colors": {
+				"bright": {
+					"black": "#333333",
+					"blue": "#54b8ff",
+					"cyan": "#eaecec",
+					"green": "#fff507",
+					"magenta": "#FFE8E8",
+					"red": "#EC5B5B",
+					"white": "#d8d8d8",
+					"yellow": "#FFF9B9"
+				},
+				"normal": {
+					"black": "#333333",
+					"blue": "#21a3ff",
+					"cyan": "#f18484",
+					"green": "#A1D8FF",
+					"magenta": "#f9c9c9",
+					"red": "#d32c21",
+					"white": "#eaeaea",
+					"yellow": "#DCFFB2"
+				},
+				"primary": {
+					"background": "#121212",
+					"dim_foreground": "#4c4c4c",
+					"foreground": "#E6E3D9"
+				}
+			},
+			"font": {
+				"size": 10
+			},
+			"window": {
+				"padding": {
+					"x": 4,
+					"y": 4
+				}
+			}
+		},
+		"btop": {
+			"available_end": "#b91c1c",
+			"available_mid": "#f59e0b",
+			"available_start": "#8a8a8d",
+			"cached_end": "#b91c1c",
+			"cached_mid": "#f59e0b",
+			"cached_start": "#8a8a8d",
+			"colors": {
+				"basic": {
+					"hi_fg": "#bef50a",
+					"main_fg": "#e9e9e9",
+					"selected_bg": "#bef50a",
+					"title": "#e9e9e9"
+				},
+				"boxes": {
+					"cpu_box": "#8a8a8d"
+				},
+				"cpu": {
+					"cpu_end": "#ffffff",
+					"cpu_mid": "#bef50a"
+				},
+				"memory": {
+					"available_end": "#ffffff",
+					"available_mid": "#bef50a",
+					"cached_end": "#ffffff",
+					"cached_mid": "#bef50a",
+					"free_end": "#ffffff",
+					"free_mid": "#bef50a",
+					"used_end": "#ffffff",
+					"used_mid": "#bef50a"
+				},
+				"network": {
+					"download_end": "#ffffff",
+					"download_mid": "#bef50a",
+					"upload_end": "#ffffff",
+					"upload_mid": "#bef50a"
+				},
+				"temperature": {
+					"temp_end": "#ffffff",
+					"temp_mid": "#bef50a"
+				}
+			},
+			"cpu_box": "#8a8a8d",
+			"cpu_end": "#b91c1c",
+			"cpu_mid": "#f59e0b",
+			"cpu_start": "#8a8a8d",
+			"div_line": "#8a8a8d",
+			"download_end": "#b91c1c",
+			"download_mid": "#f59e0b",
+			"download_start": "#8a8a8d",
+			"free_end": "#b91c1c",
+			"free_mid": "#f59e0b",
+			"free_start": "#8a8a8d",
+			"hi_fg": "#f59e0b",
+			"inactive_fg": "#333333",
+			"main_bg": "",
+			"main_fg": "#EAEAEA",
+			"mem_box": "#8a8a8d",
+			"net_box": "#8a8a8d",
+			"proc_box": "#8a8a8d",
+			"proc_misc": "#8a8a8d",
+			"selected_bg": "#f59e0b",
+			"selected_fg": "#EAEAEA",
+			"temp_end": "#b91c1c",
+			"temp_mid": "#f59e0b",
+			"temp_start": "#8a8a8d",
+			"title": "#8a8a8d",
+			"upload_end": "#b91c1c",
+			"upload_mid": "#f59e0b",
+			"upload_start": "#8a8a8d",
+			"used_end": "#b91c1c",
+			"used_mid": "#f59e0b",
+			"used_start": "#8a8a8d"
+		},
+		"neovim": {
+			"lazy": false,
+			"priority": 1000,
+			"theme_name": "omarchy-dynamic",
+			"theme_repo": ""
+		}
+	},
+	"colors": {
+		"primary": {
+			"background": "#121212",
+			"foreground": "#E6E3D9"
+		},
+		"terminal": {
+			"red": "#d32c21",
+			"green": "#00a00a",
+			"yellow": "#fff507",
+			"blue": "#bef50a",
+			"magenta": "#d32695",
+			"cyan": "#eaeaea"
+		}
+	}
+}

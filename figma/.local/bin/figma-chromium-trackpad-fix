@@ -9,6 +9,14 @@ USER_AGENT="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML,
 ORIGINAL_INPUT_CONF="$HOME/.config/hypr/input.conf"
 TEMP_INPUT_CONF="$HOME/.config/hypr/input.conf.figma.tmp"
 
+# Check for and restore any stale temp file from previous run
+if [[ -f "$TEMP_INPUT_CONF" ]]; then
+    echo "Found stale temp file from previous run, restoring..."
+    mv "$TEMP_INPUT_CONF" "$ORIGINAL_INPUT_CONF"
+    hyprctl reload
+    echo "Stale config restored"
+fi
+
 # Function to cleanup on exit
 cleanup() {
     echo "Restoring original input configuration..."
@@ -42,8 +50,8 @@ hyprctl reload
 
 echo "Launching Figma with Chromium (trackpad override active)..."
 
-# Launch Figma
-exec chromium \
+# Launch Figma (don't use exec so cleanup trap can fire)
+chromium \
   --user-agent="${USER_AGENT}" \
   --user-data-dir="$HOME/.config/figma-chromium" \
   --enable-features=UseOzonePlatform \
@@ -51,4 +59,10 @@ exec chromium \
   --gtk-version=4 \
   --disable-features=VaapiVideoDecoder \
   --app="https://www.figma.com/files/recent" \
-  "$@"
+  "$@" &
+
+# Wait for Chromium to exit
+CHROMIUM_PID=$!
+wait $CHROMIUM_PID
+
+echo "Chromium closed, cleanup will now run..."

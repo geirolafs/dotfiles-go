@@ -30,14 +30,11 @@ alias y='yazi'
 dev() {
   case "$1" in
     go) cd ~/Developer/go/ && l ;;
-    www) cd ~/Developer/go/www/ && l ;;
-    prj) cd ~/Developer/projects/ && l ;;
+    www) cd ~/Developer/www/ && l ;;
+    prj) cd ~/Developer/Projects/ && l ;;
     *) cd ~/Developer/ && l ;;
   esac
 }
-
-# Custom exports
-export EDITOR='nvim'  # Fallback for non-Hyprland sessions (SSH, TTY)
 
 # History configuration
 setopt SHARE_HISTORY
@@ -51,3 +48,4 @@ export PROMPT_EOL_MARK=""
 
 # . "$HOME/.local/share/../bin/env"  # Commented out - file doesn't exist
 export PATH="$HOME/.cache/.bun/bin:$PATH"
+eval "$(mise activate zsh)"

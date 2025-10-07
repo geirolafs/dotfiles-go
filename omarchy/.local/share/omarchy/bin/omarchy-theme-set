@@ -36,3 +36,41 @@ omarchy-theme-set-gnome
 omarchy-theme-set-eza
 omarchy-theme-set-browser
 omarchy-theme-set-vscode
+
+# Generate neovim.lua dynamically from custom_theme.json
+THEME_JSON="$CURRENT_THEME_DIR/custom_theme.json"
+NEOVIM_LUA="$CURRENT_THEME_DIR/neovim.lua"
+
+if command -v jq &> /dev/null && [[ -f "$THEME_JSON" ]]; then
+    THEME_REPO=$(jq -r '.apps.neovim.theme_repo // empty' "$THEME_JSON")
+    THEME_NAME=$(jq -r '.apps.neovim.theme_name // empty' "$THEME_JSON")
+
+    if [[ -n "$THEME_NAME" ]]; then
+        if [[ -n "$THEME_REPO" ]]; then
+            # External plugin theme
+            cat > "$NEOVIM_LUA" <<EOF
+return {
+	{ "$THEME_REPO", lazy = false, priority = 1000 },
+	{
+		"LazyVim/LazyVim",
+		opts = {
+			colorscheme = "$THEME_NAME",
+		},
+	},
+}
+EOF
+        else
+            # Local colorscheme (no plugin needed)
+            cat > "$NEOVIM_LUA" <<EOF
+return {
+	{
+		"LazyVim/LazyVim",
+		opts = {
+			colorscheme = "$THEME_NAME",
+		},
+	},
+}
+EOF
+        fi
+    fi
+fi

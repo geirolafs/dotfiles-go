@@ -1,3 +1,8 @@
 #!/bin/bash
 
-exec omarchy-launch-or-focus "Bluetui" "setsid uwsm app -- alacritty --class=Bluetui -e bluetui"
+# Force Alacritty terminal instead of $TERMINAL
+if pgrep -f "class.*Bluetui" >/dev/null; then
+  hyprctl dispatch focuswindow "class:Bluetui"
+else
+  /usr/bin/alacritty --class=Bluetui -e bluetui &
+fi

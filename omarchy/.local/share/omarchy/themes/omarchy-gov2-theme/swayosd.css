@@ -1,0 +1,38 @@
+/* SwayOSD (on-screen display for volume/brightness indicators */
+@define-color background-color #121212;
+@define-color border-color #333333;
+@define-color label #E6E3D9;
+@define-color image #E6E3D9;
+@define-color progress #ebcb8b;
+
+window {
+  padding: 0px;
+  margin: 0px 0px 0px 0px;
+}
+
+#container {
+  margin: 0px;
+}
+
+label {
+  font-weight: normal;
+  margin: 0px 0px;
+}
+
+image {
+  margin: 0px 0px;
+}
+
+progressbar {
+  min-height: 6px;
+  min-width: 200px;
+}
+
+trough {
+  min-height: 6px;
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+progress {
+  border-radius: 0;
+}
