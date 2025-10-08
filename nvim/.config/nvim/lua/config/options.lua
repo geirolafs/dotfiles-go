@@ -11,3 +11,6 @@ vim.opt.scrolloff = 10
 vim.opt.swapfile = false -- No .swp files
 vim.opt.backup = false -- No ~ backup files
 vim.opt.writebackup = false -- No backup before overwriting file
+
+-- Disable spell checking (removes squiggly underlines)
+vim.opt.spell = false

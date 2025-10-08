@@ -1,0 +1,240 @@
+#!/usr/bin/env bash
+# Deactivate fonts by removing symlinks from _active directory
+
+set -euo pipefail
+
+# Source utilities
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=/dev/null
+source "$SCRIPT_DIR/font-utils.sh" 2>/dev/null || {
+    echo "Error: font-utils.sh not found"
+    exit 1
+}
+
+ACTIVE_DIR="$HOME/.local/share/fonts/_active"
+
+# Parse options
+DRY_RUN=false
+AUTO_REFRESH=false
+DEACTIVATE_ALL=false
+TARGETS=()
+
+show_help() {
+    print_banner "FONT DEACTIVATE" "Remove fonts from your library"
+
+    cat << EOF
+${BOLD}Usage:${RESET} font-deactivate [OPTIONS] <font-name> [font-name...]
+
+Deactivate fonts by removing symlinks from _active directory.
+
+${BOLD}Arguments:${RESET}
+  <font-name>         Font name or pattern to deactivate
+                      Matches against symlink names in _active/
+                      Supports wildcards and partial matching
+
+${BOLD}Options:${RESET}
+  -a, --all           Deactivate all fonts (removes all symlinks)
+  -r, --refresh       Automatically refresh font cache after deactivation
+  -n, --dry-run       Show what would be deactivated without making changes
+  -h, --help          Show this help message
+
+${BOLD}Examples:${RESET}
+  font-deactivate Inter-4.0              # Deactivate Inter font
+  font-deactivate SF-Mono SF-Pro         # Deactivate multiple fonts
+  font-deactivate "Switzer*"             # Deactivate all Switzer variants
+  font-deactivate --all                  # Deactivate all fonts
+  font-deactivate --refresh Inter-4.0    # Deactivate and refresh cache
+
+${BOLD}Notes:${RESET}
+  - Only removes symlinks, never deletes actual font files
+  - Use font-list-active to see currently activated fonts
+  - After deactivation, run font-refresh or restart apps to update
+EOF
+    print_footer
+}
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -n|--dry-run)
+            DRY_RUN=true
+            shift
+            ;;
+        -r|--refresh)
+            AUTO_REFRESH=true
+            shift
+            ;;
+        -a|--all)
+            DEACTIVATE_ALL=true
+            shift
+            ;;
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        -*)
+            msg_error "Unknown option: $1"
+            echo "Run with --help for usage"
+            exit 1
+            ;;
+        *)
+            TARGETS+=("$1")
+            shift
+            ;;
+    esac
+done
+
+# Show banner
+if command -v figlet &>/dev/null; then
+    print_banner_figlet "Font Deactivate" "Remove fonts from your library"
+else
+    print_banner "FONT DEACTIVATE" "Remove fonts from your library"
+fi
+
+# Validate active directory
+if [[ ! -d "$ACTIVE_DIR" ]]; then
+    msg_error "Active fonts directory not found: $ACTIVE_DIR"
+    echo "  No fonts are currently activated"
+    exit 1
+fi
+
+# Check if targets provided (unless --all)
+if [[ ${#TARGETS[@]} -eq 0 ]] && [[ "$DEACTIVATE_ALL" == false ]]; then
+    msg_error "No fonts specified"
+    echo ""
+    echo "  ${DIM}Run with --help for usage${RESET}"
+    exit 1
+fi
+
+if [[ "$DRY_RUN" == true ]]; then
+    msg_info "DRY RUN MODE - No changes will be made"
+    echo ""
+fi
+
+DEACTIVATED_COUNT=0
+FAILED_COUNT=0
+
+# Handle --all flag
+if [[ "$DEACTIVATE_ALL" == true ]]; then
+    msg_arrow "Deactivating all fonts"
+    echo ""
+
+    # Get all symlinks in active directory
+    mapfile -t all_links < <(find "$ACTIVE_DIR" -maxdepth 1 -type l)
+
+    if [[ ${#all_links[@]} -eq 0 ]]; then
+        msg_warning "No activated fonts found"
+        exit 0
+    fi
+
+    TOTAL_FONTS=${#all_links[@]}
+
+    for link in "${all_links[@]}"; do
+        basename_link=$(basename "$link")
+        DEACTIVATED_COUNT=$((DEACTIVATED_COUNT + 1))
+
+        # Show progress
+        print_progress_bar $DEACTIVATED_COUNT $TOTAL_FONTS
+
+        if [[ "$DRY_RUN" == false ]]; then
+            rm "$link"
+        fi
+
+        sleep 0.02  # Small delay for visual effect
+    done
+
+    # Clear progress bar
+    printf "\r%*s\r" 80 ""
+
+    # Show results
+    for link in "${all_links[@]}"; do
+        basename_link=$(basename "$link")
+        if [[ "$DRY_RUN" == false ]]; then
+            msg_success "Deactivated: ${CYAN}$basename_link${RESET}"
+        else
+            msg_info "Would deactivate: ${CYAN}$basename_link${RESET}"
+        fi
+    done
+
+else
+    # Process specific targets
+    for target in "${TARGETS[@]}"; do
+        msg_arrow "Processing: ${CYAN}$target${RESET}"
+
+        found=false
+
+        # Try exact match first
+        if [[ -L "$ACTIVE_DIR/$target" ]]; then
+            if [[ "$DRY_RUN" == false ]]; then
+                rm "$ACTIVE_DIR/$target"
+                msg_success "Deactivated: ${CYAN}$target${RESET}"
+            else
+                msg_info "Would deactivate: ${CYAN}$target${RESET}"
+            fi
+            DEACTIVATED_COUNT=$((DEACTIVATED_COUNT + 1))
+            found=true
+        elif [[ -e "$ACTIVE_DIR/$target" ]]; then
+            msg_error "Path exists but is not a symlink: $target"
+            FAILED_COUNT=$((FAILED_COUNT + 1))
+            found=true
+        else
+            # Try pattern matching with spinner
+            start_spinner "Searching for matching fonts"
+            # shellcheck disable=SC2207
+            matches=($(find "$ACTIVE_DIR" -maxdepth 1 -type l -name "*${target}*" 2>/dev/null))
+            stop_spinner
+
+            if [[ ${#matches[@]} -gt 0 ]]; then
+                for match in "${matches[@]}"; do
+                    basename_match=$(basename "$match")
+
+                    if [[ "$DRY_RUN" == false ]]; then
+                        rm "$match"
+                        msg_success "Deactivated: ${CYAN}$basename_match${RESET}"
+                    else
+                        msg_info "Would deactivate: ${CYAN}$basename_match${RESET}"
+                    fi
+                    DEACTIVATED_COUNT=$((DEACTIVATED_COUNT + 1))
+                done
+                found=true
+            fi
+        fi
+
+        if [[ "$found" == false ]]; then
+            msg_error "Not found in active fonts: $target"
+            FAILED_COUNT=$((FAILED_COUNT + 1))
+        fi
+
+        echo ""
+    done
+fi
+
+# Summary
+echo ""
+if [[ "$DRY_RUN" == true ]]; then
+    print_summary "Summary (Dry Run)" \
+        "$(icon_font) Would deactivate:  ${BRIGHT_CYAN}${DEACTIVATED_COUNT}${RESET} fonts" \
+        "$(icon_error) Failed:             ${BRIGHT_RED}${FAILED_COUNT}${RESET} fonts"
+else
+    print_summary "Deactivation Complete" \
+        "$(icon_check) Deactivated:        ${BRIGHT_GREEN}${DEACTIVATED_COUNT}${RESET} fonts" \
+        "$(icon_error) Failed:             ${BRIGHT_RED}${FAILED_COUNT}${RESET} fonts"
+fi
+
+# Auto-refresh if requested
+if [[ "$AUTO_REFRESH" == true ]] && [[ "$DRY_RUN" == false ]] && [[ $DEACTIVATED_COUNT -gt 0 ]]; then
+    echo ""
+    msg_arrow "Running font-refresh..."
+    echo ""
+    if command -v font-refresh &>/dev/null; then
+        font-refresh
+    else
+        msg_error "font-refresh not found in PATH"
+        echo "  ${DIM}Run manually: fc-cache -fv && killall obsidian${RESET}"
+    fi
+fi
+
+echo ""
+
+if [[ $FAILED_COUNT -gt 0 ]]; then
+    exit 1
+fi

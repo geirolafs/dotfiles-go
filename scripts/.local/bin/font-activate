@@ -1,0 +1,284 @@
+#!/usr/bin/env bash
+# Activate fonts from Fontfiles by creating symlinks in _active directory
+
+set -euo pipefail
+
+# Source utilities
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=/dev/null
+source "$SCRIPT_DIR/font-utils.sh" 2>/dev/null || {
+    echo "Error: font-utils.sh not found"
+    exit 1
+}
+
+FONTFILES_DIR="$HOME/Dropbox/Sync/Fontfiles"
+ACTIVE_DIR="$HOME/.local/share/fonts/_active"
+
+# Parse options
+DRY_RUN=false
+AUTO_REFRESH=false
+FORCE=false
+TARGETS=()
+
+show_help() {
+    print_banner "FONT ACTIVATE" "Add fonts to your library"
+
+    cat << EOF
+${BOLD}Usage:${RESET} font-activate [OPTIONS] <font-name> [font-name...]
+
+Activate fonts from Fontfiles by creating symlinks in _active directory.
+
+${BOLD}Arguments:${RESET}
+  <font-name>         Font name or path (relative to Fontfiles/)
+                      Can be a directory or individual font file
+                      Supports wildcards and partial matching
+
+${BOLD}Options:${RESET}
+  -r, --refresh       Automatically refresh font cache and restart apps
+  -f, --force         Force overwrite existing symlinks
+  -n, --dry-run       Show what would be activated without making changes
+  -h, --help          Show this help message
+
+${BOLD}Examples:${RESET}
+  font-activate Inter-4.0                    # Activate Inter font
+  font-activate SF-Mono SF-Pro NY            # Activate multiple Apple fonts
+  font-activate "Foundries/Grilli Type"      # Activate all Grilli Type fonts
+  font-activate --refresh Inter-4.0          # Activate and refresh cache
+  font-activate --dry-run "Foundries/*"      # Preview activation
+
+${BOLD}Font Discovery:${RESET}
+  - Searches in: ${FONTFILES_DIR}
+  - Activated fonts appear in: ${ACTIVE_DIR}
+  - Use font-list-active to see currently activated fonts
+  - Use font-refresh to rebuild cache after activation
+
+${BOLD}Notes:${RESET}
+  - Symlinks are created for directories or individual font files
+  - Existing symlinks are skipped unless --force is used
+  - After activation, run font-refresh or restart apps to detect fonts
+EOF
+    print_footer
+}
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -n|--dry-run)
+            DRY_RUN=true
+            shift
+            ;;
+        -r|--refresh)
+            AUTO_REFRESH=true
+            shift
+            ;;
+        -f|--force)
+            FORCE=true
+            shift
+            ;;
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        -*)
+            msg_error "Unknown option: $1"
+            echo "Run with --help for usage"
+            exit 1
+            ;;
+        *)
+            TARGETS+=("$1")
+            shift
+            ;;
+    esac
+done
+
+# Show banner
+if command -v figlet &>/dev/null; then
+    print_banner_figlet "Font Activate" "Add fonts to your library"
+else
+    print_banner "FONT ACTIVATE" "Add fonts to your library"
+fi
+
+# Validate directories
+if [[ ! -d "$FONTFILES_DIR" ]]; then
+    msg_error "Fontfiles directory not found: $FONTFILES_DIR"
+    exit 1
+fi
+
+# Create active directory if it doesn't exist
+if [[ ! -d "$ACTIVE_DIR" ]] && [[ "$DRY_RUN" == false ]]; then
+    mkdir -p "$ACTIVE_DIR"
+    msg_success "Created: $ACTIVE_DIR"
+fi
+
+# Check if targets provided
+if [[ ${#TARGETS[@]} -eq 0 ]]; then
+    msg_error "No fonts specified"
+    echo ""
+    echo "  ${DIM}Run with --help for usage${RESET}"
+    exit 1
+fi
+
+if [[ "$DRY_RUN" == true ]]; then
+    msg_info "DRY RUN MODE - No changes will be made"
+    echo ""
+fi
+
+ACTIVATED_COUNT=0
+SKIPPED_COUNT=0
+FAILED_COUNT=0
+
+# Process each target
+for target in "${TARGETS[@]}"; do
+    msg_arrow "Processing: ${CYAN}$target${RESET}"
+
+    # Try to find the target in Fontfiles
+    found=false
+
+    # First try exact match (directory or file)
+    if [[ -e "$FONTFILES_DIR/$target" ]]; then
+        source_path="$FONTFILES_DIR/$target"
+        basename_target=$(basename "$target")
+        link_path="$ACTIVE_DIR/$basename_target"
+
+        # Check if already activated
+        if [[ -L "$link_path" ]]; then
+            if [[ "$FORCE" == true ]]; then
+                if [[ "$DRY_RUN" == false ]]; then
+                    rm "$link_path"
+                    msg_info "Removed existing symlink: ${CYAN}$basename_target${RESET}"
+                else
+                    msg_info "Would remove existing symlink: ${CYAN}$basename_target${RESET}"
+                fi
+            else
+                echo "  $(icon_skip) Already activated: ${CYAN}$basename_target${RESET} ${DIM}(use --force to overwrite)${RESET}"
+                SKIPPED_COUNT=$((SKIPPED_COUNT + 1))
+                found=true
+                echo ""
+                continue
+            fi
+        elif [[ -e "$link_path" ]]; then
+            msg_error "Path exists but is not a symlink: $link_path"
+            FAILED_COUNT=$((FAILED_COUNT + 1))
+            found=true
+            echo ""
+            continue
+        fi
+
+        # Create symlink
+        if [[ "$DRY_RUN" == false ]]; then
+            ln -s "$source_path" "$link_path"
+            msg_success "Activated: ${CYAN}$basename_target${RESET}"
+        else
+            msg_info "Would activate: ${CYAN}$basename_target${RESET}"
+            echo "    Source: ${DIM}${source_path#$FONTFILES_DIR/}${RESET}"
+            echo "    Link:   ${DIM}${link_path#$HOME/}${RESET}"
+        fi
+        ACTIVATED_COUNT=$((ACTIVATED_COUNT + 1))
+        found=true
+
+    else
+        # Try searching for pattern match with spinner
+        start_spinner "Searching for '$target' in Fontfiles"
+
+        # shellcheck disable=SC2207
+        matches=($(find "$FONTFILES_DIR" -maxdepth 3 -iname "*${target}*" -type d 2>/dev/null))
+
+        if [[ ${#matches[@]} -eq 0 ]]; then
+            # Try matching files
+            # shellcheck disable=SC2207
+            matches=($(find "$FONTFILES_DIR" -maxdepth 4 -iname "*${target}*" \( -name "*.ttf" -o -name "*.otf" -o -name "*.woff" -o -name "*.woff2" \) 2>/dev/null))
+        fi
+
+        stop_spinner
+
+        if [[ ${#matches[@]} -gt 0 ]]; then
+            if [[ ${#matches[@]} -eq 1 ]]; then
+                source_path="${matches[0]}"
+                basename_target=$(basename "$source_path")
+                link_path="$ACTIVE_DIR/$basename_target"
+
+                # Check if already activated
+                if [[ -L "$link_path" ]]; then
+                    if [[ "$FORCE" == true ]]; then
+                        if [[ "$DRY_RUN" == false ]]; then
+                            rm "$link_path"
+                            msg_info "Removed existing symlink: ${CYAN}$basename_target${RESET}"
+                        else
+                            msg_info "Would remove existing symlink: ${CYAN}$basename_target${RESET}"
+                        fi
+                    else
+                        echo "  $(icon_skip) Already activated: ${CYAN}$basename_target${RESET} ${DIM}(use --force to overwrite)${RESET}"
+                        SKIPPED_COUNT=$((SKIPPED_COUNT + 1))
+                        found=true
+                        echo ""
+                        continue
+                    fi
+                elif [[ -e "$link_path" ]]; then
+                    msg_error "Path exists but is not a symlink: $link_path"
+                    FAILED_COUNT=$((FAILED_COUNT + 1))
+                    found=true
+                    echo ""
+                    continue
+                fi
+
+                # Create symlink
+                if [[ "$DRY_RUN" == false ]]; then
+                    ln -s "$source_path" "$link_path"
+                    msg_success "Activated: ${CYAN}$basename_target${RESET}"
+                else
+                    msg_info "Would activate: ${CYAN}$basename_target${RESET}"
+                    echo "    Source: ${DIM}${source_path#$FONTFILES_DIR/}${RESET}"
+                    echo "    Link:   ${DIM}${link_path#$HOME/}${RESET}"
+                fi
+                ACTIVATED_COUNT=$((ACTIVATED_COUNT + 1))
+                found=true
+            else
+                msg_warning "Multiple matches found for '$target':"
+                for match in "${matches[@]}"; do
+                    echo "      ${DIM}- ${match#$FONTFILES_DIR/}${RESET}"
+                done
+                echo "    ${YELLOW}Please be more specific${RESET}"
+                FAILED_COUNT=$((FAILED_COUNT + 1))
+                found=true
+            fi
+        fi
+    fi
+
+    if [[ "$found" == false ]]; then
+        msg_error "Not found: $target"
+        FAILED_COUNT=$((FAILED_COUNT + 1))
+    fi
+
+    echo ""
+done
+
+# Summary
+if [[ "$DRY_RUN" == true ]]; then
+    print_summary "Summary (Dry Run)" \
+        "$(icon_font) Would activate:  ${BRIGHT_CYAN}${ACTIVATED_COUNT}${RESET} fonts" \
+        "$(icon_skip) Would skip:      ${BRIGHT_YELLOW}${SKIPPED_COUNT}${RESET} fonts ${DIM}(already activated)${RESET}" \
+        "$(icon_error) Failed:          ${BRIGHT_RED}${FAILED_COUNT}${RESET} fonts"
+else
+    print_summary "Activation Complete" \
+        "$(icon_check) Activated:       ${BRIGHT_GREEN}${ACTIVATED_COUNT}${RESET} fonts" \
+        "$(icon_skip) Skipped:         ${BRIGHT_YELLOW}${SKIPPED_COUNT}${RESET} fonts ${DIM}(already activated)${RESET}" \
+        "$(icon_error) Failed:          ${BRIGHT_RED}${FAILED_COUNT}${RESET} fonts"
+fi
+
+# Auto-refresh if requested
+if [[ "$AUTO_REFRESH" == true ]] && [[ "$DRY_RUN" == false ]] && [[ $ACTIVATED_COUNT -gt 0 ]]; then
+    echo ""
+    msg_arrow "Running font-refresh..."
+    echo ""
+    if command -v font-refresh &>/dev/null; then
+        font-refresh
+    else
+        msg_error "font-refresh not found in PATH"
+        echo "  ${DIM}Run manually: fc-cache -fv && killall obsidian${RESET}"
+    fi
+fi
+
+echo ""
+
+if [[ $FAILED_COUNT -gt 0 ]]; then
+    exit 1
+fi

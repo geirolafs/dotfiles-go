@@ -1,0 +1,275 @@
+#!/usr/bin/env bash
+# List currently activated fonts with premium TUI
+
+set -euo pipefail
+
+# Source utilities
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=/dev/null
+source "$SCRIPT_DIR/font-utils.sh" 2>/dev/null || {
+    echo "Error: font-utils.sh not found"
+    exit 1
+}
+
+ACTIVE_DIR="$HOME/.local/share/fonts/_active"
+
+# Parse options
+VERBOSE=false
+SHOW_PATHS=false
+SHOW_BROKEN=false
+
+show_help() {
+    print_banner "FONT LIST" "View activated fonts"
+
+    cat << EOF
+${BOLD}Usage:${RESET} font-list-active [OPTIONS]
+
+List currently activated fonts in ${CYAN}_active${RESET} directory.
+
+${BOLD}Options:${RESET}
+  -v, --verbose       Show detailed information (font counts, sizes)
+  -p, --paths         Show full source paths for symlinks
+  -b, --broken        Only show broken symlinks (need cleanup)
+  -h, --help          Show this help message
+
+${BOLD}Examples:${RESET}
+  font-list-active                   # List activated fonts
+  font-list-active -v                # Show detailed stats
+  font-list-active -p                # Show source paths
+  font-list-active -b                # Find broken symlinks
+
+${BOLD}Notes:${RESET}
+  - Only shows symlinks in _active directory
+  - Use ${CYAN}font-activate${RESET} to activate more fonts
+  - Use ${CYAN}font-deactivate${RESET} to remove fonts
+EOF
+    print_footer
+}
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -v|--verbose)
+            VERBOSE=true
+            shift
+            ;;
+        -p|--paths)
+            SHOW_PATHS=true
+            shift
+            ;;
+        -b|--broken)
+            SHOW_BROKEN=true
+            shift
+            ;;
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        *)
+            msg_error "Unknown option: $1"
+            echo "Run with ${CYAN}--help${RESET} for usage"
+            exit 1
+            ;;
+    esac
+done
+
+# Show banner
+if command -v figlet &>/dev/null; then
+    print_banner_figlet "Font List" "Manage your typography"
+else
+    print_banner "FONT LIST" "Manage your typography"
+fi
+
+# Check if active directory exists
+if [[ ! -d "$ACTIVE_DIR" ]]; then
+    msg_error "Active fonts directory not found"
+    echo "  ${DIM}${ACTIVE_DIR}${RESET}"
+    echo ""
+    echo "  No fonts are currently activated"
+    exit 1
+fi
+
+# Scan for fonts
+mapfile -t all_links < <(find "$ACTIVE_DIR" -maxdepth 1 -type l 2>/dev/null | sort)
+
+if [[ ${#all_links[@]} -eq 0 ]]; then
+    print_info_box "No Fonts Activated" \
+        "${DIM}Your font library is empty${RESET}" \
+        "" \
+        "$(icon_arrow) Get started:" \
+        "  ${CYAN}font-activate Inter-4.0${RESET}" \
+        "  ${CYAN}font-activate SF-Mono${RESET}" \
+        "  ${CYAN}font-activate \"Foundries/Grilli Type\"${RESET}"
+    exit 0
+fi
+
+# Count broken vs valid symlinks
+VALID_COUNT=0
+BROKEN_COUNT=0
+TOTAL_SIZE=0
+
+for link in "${all_links[@]}"; do
+    if [[ -e "$link" ]]; then
+        VALID_COUNT=$((VALID_COUNT + 1))
+        # Calculate size if verbose mode
+        if [[ "$VERBOSE" == true ]]; then
+            link_size=$(du -sb "$link" 2>/dev/null | cut -f1 || echo "0")
+            TOTAL_SIZE=$((TOTAL_SIZE + link_size))
+        fi
+    else
+        BROKEN_COUNT=$((BROKEN_COUNT + 1))
+    fi
+done
+
+# If --broken flag, only show broken symlinks
+if [[ "$SHOW_BROKEN" == true ]]; then
+    if [[ $BROKEN_COUNT -eq 0 ]]; then
+        msg_success "No broken symlinks found"
+        echo ""
+        echo "  ${DIM}All font symlinks are valid!${RESET}"
+        exit 0
+    fi
+
+    print_header_box 68
+    print_header_row "$(icon_warning) ${BOLD}Broken Symlinks${RESET} ${DIM}(${BROKEN_COUNT} found)${RESET}" 68
+    print_header_separator 68
+
+    for link in "${all_links[@]}"; do
+        if [[ ! -e "$link" ]]; then
+            basename_link=$(basename "$link")
+            target=$(readlink "$link" 2>/dev/null || echo "<unknown>")
+            print_header_row "  ${BRIGHT_RED}✗${RESET} ${basename_link}" 68
+            print_header_row "     ${BRIGHT_BLACK}└─${RESET} ${DIM}$target${RESET}" 68
+        fi
+    done
+
+    print_header_footer 68
+
+    echo ""
+    msg_info "To remove broken symlinks:"
+    echo "    ${DIM}cd $ACTIVE_DIR${RESET}"
+    echo "    ${DIM}find . -type l ! -exec test -e {} \\; -delete${RESET}"
+    exit 0
+fi
+
+# Show header
+echo ""
+print_header_box 68
+print_header_row "$(icon_font) ${BOLD}Activated Fonts${RESET} ${BRIGHT_BLACK}│${RESET} ${DIM}${VALID_COUNT} families${RESET}" 68
+
+if [[ $BROKEN_COUNT -gt 0 ]]; then
+    print_header_separator 68
+    print_header_row "$(icon_warning) ${BRIGHT_YELLOW}${BROKEN_COUNT} broken symlink(s)${RESET} ${DIM}(run with ${CYAN}-b${RESET}${DIM})${RESET}" 68
+fi
+
+print_header_separator 68
+
+# List fonts
+font_index=0
+for link in "${all_links[@]}"; do
+    basename_link=$(basename "$link")
+
+    # Skip broken symlinks in normal mode
+    if [[ ! -e "$link" ]]; then
+        continue
+    fi
+
+    font_index=$((font_index + 1))
+    is_last=false
+    [[ $font_index -eq $VALID_COUNT ]] && is_last=true
+
+    # Tree connector
+    if [[ "$is_last" == "true" ]]; then
+        connector="${BRIGHT_BLACK}└─${RESET}"
+    else
+        connector="${BRIGHT_BLACK}├─${RESET}"
+    fi
+
+    # Basic listing
+    if [[ "$SHOW_PATHS" == false ]] && [[ "$VERBOSE" == false ]]; then
+        print_header_row "  ${connector} ${BRIGHT_CYAN}${basename_link}${RESET}" 68
+    fi
+
+    # Show paths
+    if [[ "$SHOW_PATHS" == true ]]; then
+        target=$(readlink "$link")
+        rel_target="${target#$HOME/}"
+        print_header_row "  ${connector} ${BRIGHT_CYAN}${basename_link}${RESET}" 68
+
+        if [[ "$is_last" == "true" ]]; then
+            print_header_row "     ${BRIGHT_BLACK}  ${RESET} $(icon_link) ${DIM}~/${rel_target}${RESET}" 68
+        else
+            print_header_row "     ${BRIGHT_BLACK}│ ${RESET} $(icon_link) ${DIM}~/${rel_target}${RESET}" 68
+        fi
+    fi
+
+    # Verbose mode
+    if [[ "$VERBOSE" == true ]]; then
+        target=$(readlink "$link")
+        rel_target="${target#$HOME/}"
+
+        # Get stats
+        if [[ -d "$link" ]]; then
+            font_count=$(find "$link" -type f \( -name "*.ttf" -o -name "*.otf" -o -name "*.woff" -o -name "*.woff2" \) 2>/dev/null | wc -l)
+            size_kb=$(du -sk "$link" 2>/dev/null | cut -f1 || echo "0")
+
+            if [[ $size_kb -gt 1024 ]]; then
+                size_mb=$((size_kb / 1024))
+                size_str="${size_mb}MB"
+            else
+                size_str="${size_kb}KB"
+            fi
+
+            print_header_row "  ${connector} ${BRIGHT_CYAN}${basename_link}${RESET}" 68
+
+            if [[ "$is_last" == "true" ]]; then
+                print_header_row "       ${DIM}├─${RESET} ${BRIGHT_GREEN}${font_count}${RESET} fonts ${BRIGHT_BLACK}│${RESET} ${BRIGHT_YELLOW}${size_str}${RESET}" 68
+                print_header_row "       ${DIM}└─${RESET} ${DIM}~/${rel_target}${RESET}" 68
+            else
+                print_header_row "     ${BRIGHT_BLACK}│ ${DIM}├─${RESET} ${BRIGHT_GREEN}${font_count}${RESET} fonts ${BRIGHT_BLACK}│${RESET} ${BRIGHT_YELLOW}${size_str}${RESET}" 68
+                print_header_row "     ${BRIGHT_BLACK}│ ${DIM}└─${RESET} ${DIM}~/${rel_target}${RESET}" 68
+            fi
+        elif [[ -f "$link" ]]; then
+            size_kb=$(du -sk "$link" 2>/dev/null | cut -f1 || echo "0")
+            size_str="${size_kb}KB"
+
+            print_header_row "  ${connector} ${BRIGHT_CYAN}${basename_link}${RESET}" 68
+
+            if [[ "$is_last" == "true" ]]; then
+                print_header_row "       ${DIM}├─${RESET} ${BRIGHT_YELLOW}${size_str}${RESET}" 68
+                print_header_row "       ${DIM}└─${RESET} ${DIM}~/${rel_target}${RESET}" 68
+            else
+                print_header_row "     ${BRIGHT_BLACK}│ ${DIM}├─${RESET} ${BRIGHT_YELLOW}${size_str}${RESET}" 68
+                print_header_row "     ${BRIGHT_BLACK}│ ${DIM}└─${RESET} ${DIM}~/${rel_target}${RESET}" 68
+            fi
+        fi
+    fi
+done
+
+print_header_footer 68
+
+# Summary
+if [[ "$VERBOSE" == true ]]; then
+    # Calculate total fonts
+    total_fonts=$(find "$ACTIVE_DIR" -type f \( -name "*.ttf" -o -name "*.otf" -o -name "*.woff" -o -name "*.woff2" \) 2>/dev/null | wc -l)
+
+    # Format total size
+    if [[ $TOTAL_SIZE -gt 1073741824 ]]; then
+        total_size_gb=$((TOTAL_SIZE / 1073741824))
+        total_size_str="${total_size_gb}GB"
+    elif [[ $TOTAL_SIZE -gt 1048576 ]]; then
+        total_size_mb=$((TOTAL_SIZE / 1048576))
+        total_size_str="${total_size_mb}MB"
+    else
+        total_size_kb=$((TOTAL_SIZE / 1024))
+        total_size_str="${total_size_kb}KB"
+    fi
+
+    print_summary "Statistics" \
+        "${BRIGHT_CYAN}●${RESET} Font families:  ${BRIGHT_GREEN}${VALID_COUNT}${RESET}" \
+        "${BRIGHT_CYAN}●${RESET} Total fonts:    ${BRIGHT_CYAN}${total_fonts}${RESET}" \
+        "${BRIGHT_CYAN}●${RESET} Total size:     ${BRIGHT_YELLOW}${total_size_str}${RESET}" \
+        "${BRIGHT_CYAN}●${RESET} Location:       ${DIM}${ACTIVE_DIR}${RESET}"
+fi
+
+# Footer with shortcuts
+print_shortcuts

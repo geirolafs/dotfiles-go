@@ -143,6 +143,63 @@ sync-system-font
 # Override config at ~/.config/sync-system-font.conf
 ```
 
+### Font Management
+The font management system allows selective activation of fonts from a large library stored in Dropbox. Fonts are stored in `~/Dropbox/Sync/Fontfiles/` and activated by creating symlinks in `~/.local/share/fonts/_active/`.
+
+```bash
+# List currently activated fonts
+font-list-active           # Simple list
+font-list-active -v        # Verbose with stats
+font-list-active -p        # Show source paths
+font-list-active -b        # Find broken symlinks
+
+# Activate fonts (creates symlinks in _active/)
+font-activate Inter-4.0                    # Activate Inter font family
+font-activate SF-Mono SF-Pro NY            # Activate multiple Apple fonts
+font-activate "Foundries/Grilli Type"      # Activate all fonts from foundry
+font-activate --refresh Inter-4.0          # Activate and refresh cache
+font-activate --dry-run "Foundries/*"      # Preview what would be activated
+
+# Deactivate fonts (removes symlinks)
+font-deactivate Inter-4.0              # Deactivate specific font
+font-deactivate SF-Mono SF-Pro         # Deactivate multiple fonts
+font-deactivate "Switzer*"             # Pattern matching
+font-deactivate --all                  # Deactivate all fonts
+font-deactivate --refresh Inter-4.0    # Deactivate and refresh cache
+
+# Refresh font cache and restart apps
+font-refresh                           # Rebuild cache and restart Obsidian
+font-refresh --apps obsidian,discord   # Restart specific apps
+font-refresh --skip-apps               # Only rebuild cache
+font-refresh --skip-cache              # Only restart apps
+
+# Font library structure
+# ~/Dropbox/Sync/Fontfiles/           # Master font library
+# ├── Foundries/                      # Commercial foundry fonts
+# ├── System/                         # System fonts (Apple, Inter, etc.)
+# ├── Trials/                         # Trial/demo fonts
+# └── _Active/                        # Empty (lowercase symlink deprecated)
+#
+# ~/.local/share/fonts/_active/       # Activated fonts (symlinks)
+# └── SF-Mono -> ~/Dropbox/Sync/Fontfiles/System/Apple/SF-Mono
+```
+
+**Workflow:**
+1. Activate fonts: `font-activate Inter-4.0 SF-Mono`
+2. Refresh cache and apps: `font-refresh`
+3. Restart app manually (e.g., Obsidian) to detect new fonts
+4. Check font picker in app - fonts should appear
+
+**Why refresh is needed:**
+- fontconfig caches font lists in `~/.cache/fontconfig/`
+- Electron apps (Obsidian, VS Code, Discord) cache fonts at startup
+- Apps must be restarted after activating fonts to rebuild their internal font lists
+
+**Troubleshooting:**
+- If fonts don't appear after refresh, check: `fc-list | grep <font-name>`
+- Clean broken symlinks: `font-list-active -b` then remove manually
+- Verify activation: `font-list-active -v` shows detailed stats
+
 ### Asahi-Specific Utilities
 ```bash
 # Figma with trackpad workarounds (disables "disable_while_typing" for space bar hand tool)
@@ -262,10 +319,13 @@ Themes are stored in `omarchy/.local/share/omarchy/themes/<theme-name>/`:
 - `scripts/` - System utilities:
   - `battery-monitor` - Multi-level battery alerts (20%, 10%, 5%)
   - `sync-system-font` - Alacritty → GTK font sync
+  - `font-activate`, `font-deactivate` - Selective font activation from large library
+  - `font-list-active`, `font-refresh` - Font management and cache refresh
   - `keyboard-backlight-swayidle.sh` - Auto-off backlight after 10s idle
   - `omarchy-launch-wifi`, `omarchy-launch-bluetooth` - Network utilities
   - `twitch-chromium` - Twitch launcher with Chromium
   - `restore-volume.sh` - Volume restoration
+  - `remove-duplicate-fonts`, `compare-fontlib` - Font library maintenance
 - `figma/` - Figma launcher with Asahi workarounds (trackpad fix, font access via local font server)
 - `rclone/` - Cloud storage (Dropbox) sync via rclone:
   - `dropbox-mount`, `dropbox-unmount` - Mount/unmount operations

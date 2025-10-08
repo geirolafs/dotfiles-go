@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Test MPV streaming performance
+# This script tests a sample video to verify smooth playback
+
+set -euo pipefail
+
+echo "=== MPV Streaming Test ==="
+echo "Testing with sample HLS stream..."
+echo ""
+echo "Watch for:"
+echo "  - Smooth video motion (no stuttering)"
+echo "  - Clear audio (no crackling/popping)"
+echo "  - Proper sync between audio and video"
+echo ""
+echo "Keyboard shortcuts:"
+echo "  'i' - Show playback stats (fps, dropped frames, A/V sync)"
+echo "  'q' - Quit"
+echo ""
+read -p "Press Enter to start test..."
+
+# Test with a standard sample video (HLS stream)
+mpv --profile=stremio \
+    "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"
+
+echo ""
+echo "Test complete!"
+echo ""
+echo "If you experienced issues, try these alternatives:"
+echo ""
+echo "  # Less demanding (disables interpolation):"
+echo "  mpv --profile=lowend https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"
+echo ""
+echo "  # Try different audio backend:"
+echo "  mpv --ao=pulse https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"
+echo "  mpv --ao=alsa https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"
+echo ""
+echo "  # Debug mode (verbose logging):"
+echo "  mpv --profile=stremio --msg-level=all=v [url] 2>&1 | tee /tmp/mpv-debug.log"

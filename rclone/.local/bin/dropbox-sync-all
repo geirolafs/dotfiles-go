@@ -49,6 +49,8 @@ rclone bisync "$LOCAL_PATH" "${REMOTE}${REMOTE_PATH}" \
     --exclude ".venv/**" \
     --exclude "__pycache__/**" \
     --exclude "*.pyc" \
+    --exclude "Fontfiles/_active" \
+    --exclude "Fontfiles/_Active" \
     --create-empty-src-dirs \
     --compare size,modtime,checksum \
     --slow-hash-sync-only \

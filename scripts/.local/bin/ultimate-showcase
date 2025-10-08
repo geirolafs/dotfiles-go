@@ -1,0 +1,77 @@
+#!/bin/bash
+
+# Ultimate Terminal Showcase
+# Combines multiple visual elements for maximum impact
+
+clear
+
+# Color palette
+CYAN='\e[36m'
+GREEN='\e[32m'
+YELLOW='\e[33m'
+MAGENTA='\e[35m'
+BLUE='\e[34m'
+RED='\e[31m'
+BOLD='\e[1m'
+RESET='\e[0m'
+
+# Gradient banner
+echo -e "\n"
+colors=(196 202 208 214 220 226 190 154 118 82 46 45 44 43 42 41)
+banner="
+ ██████╗ ███╗   ███╗ █████╗ ██████╗  ██████╗██╗  ██╗██╗   ██╗
+██╔═══██╗████╗ ████║██╔══██╗██╔══██╗██╔════╝██║  ██║╚██╗ ██╔╝
+██║   ██║██╔████╔██║███████║██████╔╝██║     ███████║ ╚████╔╝
+██║   ██║██║╚██╔╝██║██╔══██║██╔══██╗██║     ██╔══██║  ╚██╔╝
+╚██████╔╝██║ ╚═╝ ██║██║  ██║██║  ██║╚██████╗██║  ██║   ██║
+ ╚═════╝ ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝   ╚═╝
+"
+
+while IFS= read -r line; do
+    for i in $(seq 0 $((${#line} - 1))); do
+        char="${line:$i:1}"
+        color_idx=$((i % ${#colors[@]}))
+        color=${colors[$color_idx]}
+        printf "\e[38;5;%sm%s" "$color" "$char"
+    done
+    echo -e "\e[0m"
+done <<< "$banner"
+
+# Compact system info
+if command -v omarchy-theme-current &> /dev/null; then
+    theme=$(omarchy-theme-current)
+    echo -e "\n${BOLD}${CYAN}Theme:${RESET} ${GREEN}$theme${RESET}"
+fi
+
+if command -v omarchy-version &> /dev/null; then
+    version=$(omarchy-version)
+    echo -e "${BOLD}${CYAN}System:${RESET} ${GREEN}Omarchy $version${RESET} on ${GREEN}$(uname -m)${RESET}"
+fi
+
+echo -e "${BOLD}${CYAN}Terminal:${RESET} ${GREEN}$TERM${RESET}\n"
+
+# Color blocks
+echo -e "${BOLD}Color Palette:${RESET}"
+echo -ne "  "
+for i in {0..7}; do printf "\e[48;5;%sm   \e[0m" "$i"; done
+echo
+echo -ne "  "
+for i in {8..15}; do printf "\e[48;5;%sm   \e[0m" "$i"; done
+echo -e "\n"
+
+# Rainbow separator
+echo -ne "  "
+for c in 196 202 208 214 220 226 190 154 118 82 46; do
+    printf "\e[38;5;%sm━\e[0m" "$c"
+done
+echo -e "  \n"
+
+# Hardware highlights
+echo -e "${BOLD}${MAGENTA}Hardware:${RESET}"
+if command -v fastfetch &> /dev/null; then
+    fastfetch --pipe false --logo none --structure \
+        cpu:gpu:memory --key-width 5 --separator "  " \
+        --color blue --key-color cyan 2>/dev/null | sed 's/^/  /'
+fi
+
+echo

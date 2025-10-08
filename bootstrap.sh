@@ -27,6 +27,7 @@ stow wireplumber
 stow asahi-audio-custom
 stow easyeffects
 stow sync-system-font
+stow mpv
 stow mise
 stow omarchy
 stow nvim
@@ -36,6 +37,7 @@ stow chromium
 stow lazygit
 stow lazydocker
 stow walker
+stow markdownlint
 # stow git
 
 echo "Done. Symlinks created. 🎉"

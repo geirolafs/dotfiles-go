@@ -1,0 +1,259 @@
+#!/usr/bin/env bash
+# Rebuild font cache and restart apps with premium TUI
+
+set -euo pipefail
+
+# Source utilities
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=/dev/null
+source "$SCRIPT_DIR/font-utils.sh" 2>/dev/null || {
+    echo "Error: font-utils.sh not found"
+    exit 1
+}
+
+# Parse options
+SKIP_CACHE=false
+SKIP_APPS=false
+APPS_TO_RESTART=("obsidian")
+
+show_help() {
+    print_banner "FONT REFRESH" "Rebuild cache & restart apps"
+
+    cat << EOF
+${BOLD}Usage:${RESET} font-refresh [OPTIONS]
+
+Rebuild font cache and restart apps to detect newly activated fonts.
+
+${BOLD}Options:${RESET}
+  --skip-cache        Skip font cache rebuild (only restart apps)
+  --skip-apps         Skip app restarts (only rebuild cache)
+  --apps <list>       Comma-separated list of apps to restart (default: obsidian)
+                      Available: obsidian,code,discord,brave,chromium,all
+  -h, --help          Show this help message
+
+${BOLD}Examples:${RESET}
+  font-refresh                           # Rebuild cache and restart Obsidian
+  font-refresh --apps obsidian,discord   # Restart multiple apps
+  font-refresh --skip-apps               # Only rebuild font cache
+  font-refresh --skip-cache              # Only restart apps
+
+${BOLD}Process:${RESET}
+  $(icon_arrow) Rebuild fontconfig cache (fc-cache -fv)
+  $(icon_arrow) Restart specified Electron apps to detect new fonts
+  $(icon_arrow) Verify font cache status
+
+${BOLD}Notes:${RESET}
+  - Rebuilding cache takes ~5-10 seconds
+  - Apps will be force-killed and need to be manually restarted
+  - Save your work before running this command
+  - After refresh, fonts should be available in app font pickers
+EOF
+    print_footer
+}
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --skip-cache)
+            SKIP_CACHE=true
+            shift
+            ;;
+        --skip-apps)
+            SKIP_APPS=true
+            shift
+            ;;
+        --apps)
+            if [[ -n "${2:-}" ]]; then
+                IFS=',' read -ra APPS_TO_RESTART <<< "$2"
+                shift 2
+            else
+                msg_error "--apps requires an argument"
+                exit 1
+            fi
+            ;;
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        *)
+            msg_error "Unknown option: $1"
+            echo "Run with ${CYAN}--help${RESET} for usage"
+            exit 1
+            ;;
+    esac
+done
+
+# Show banner
+if command -v figlet &>/dev/null; then
+    print_banner_figlet "Font Refresh" "Reload your typography"
+else
+    print_banner "FONT REFRESH" "Reload your typography"
+fi
+
+# Rebuild font cache
+if [[ "$SKIP_CACHE" == false ]]; then
+    msg_arrow "Rebuilding font cache"
+    echo ""
+
+    if command -v fc-cache &>/dev/null; then
+        # Run fc-cache with animated spinner
+        start_spinner "Rebuilding cache ${DIM}(this may take 5-10 seconds)${RESET}" "dots"
+        fc-cache -fv >/dev/null 2>&1
+        stop_spinner
+
+        msg_success "Font cache rebuilt successfully"
+    else
+        msg_error "fc-cache not found (install fontconfig)"
+        exit 1
+    fi
+else
+    msg_info "Skipping font cache rebuild"
+fi
+
+echo ""
+
+# Restart apps
+if [[ "$SKIP_APPS" == false ]]; then
+    msg_arrow "Restarting applications"
+    echo ""
+
+    RESTARTED_COUNT=0
+    NOT_RUNNING_COUNT=0
+
+    # Handle "all" keyword
+    for app in "${APPS_TO_RESTART[@]}"; do
+        if [[ "$app" == "all" ]]; then
+            APPS_TO_RESTART=("obsidian" "code" "discord" "brave" "chromium")
+            break
+        fi
+    done
+
+    TOTAL_APPS=${#APPS_TO_RESTART[@]}
+    CURRENT_APP=0
+
+    # Process each app
+    for app in "${APPS_TO_RESTART[@]}"; do
+        CURRENT_APP=$((CURRENT_APP + 1))
+
+        case "$app" in
+            obsidian)
+                if pgrep -x obsidian &>/dev/null; then
+                    start_spinner "${BRIGHT_BLACK}[${CURRENT_APP}/${TOTAL_APPS}]${RESET} Stopping ${BRIGHT_MAGENTA}Obsidian${RESET}" "wave"
+                    killall obsidian 2>/dev/null || true
+                    sleep 0.5
+                    # Check if killed successfully
+                    if pgrep -x obsidian &>/dev/null; then
+                        killall -9 obsidian 2>/dev/null || true
+                        sleep 0.3
+                    fi
+                    stop_spinner
+                    msg_success "Obsidian stopped ${DIM}(restart manually)${RESET}"
+                    RESTARTED_COUNT=$((RESTARTED_COUNT + 1))
+                else
+                    echo "  ${BRIGHT_BLACK}[${CURRENT_APP}/${TOTAL_APPS}]${RESET} $(icon_info) Obsidian not running ${DIM}(skipped)${RESET}"
+                    NOT_RUNNING_COUNT=$((NOT_RUNNING_COUNT + 1))
+                fi
+                ;;
+
+            code|vscode)
+                if pgrep -x code &>/dev/null; then
+                    start_spinner "${BRIGHT_BLACK}[${CURRENT_APP}/${TOTAL_APPS}]${RESET} Stopping ${BRIGHT_BLUE}VS Code${RESET}" "wave"
+                    killall code 2>/dev/null || true
+                    sleep 0.5
+                    if pgrep -x code &>/dev/null; then
+                        killall -9 code 2>/dev/null || true
+                        sleep 0.3
+                    fi
+                    stop_spinner
+                    msg_success "VS Code stopped ${DIM}(restart manually)${RESET}"
+                    RESTARTED_COUNT=$((RESTARTED_COUNT + 1))
+                else
+                    echo "  ${BRIGHT_BLACK}[${CURRENT_APP}/${TOTAL_APPS}]${RESET} $(icon_info) VS Code not running ${DIM}(skipped)${RESET}"
+                    NOT_RUNNING_COUNT=$((NOT_RUNNING_COUNT + 1))
+                fi
+                ;;
+
+            discord)
+                if pgrep -i discord &>/dev/null; then
+                    start_spinner "${BRIGHT_BLACK}[${CURRENT_APP}/${TOTAL_APPS}]${RESET} Stopping ${BRIGHT_MAGENTA}Discord${RESET}" "wave"
+                    killall -i discord 2>/dev/null || true
+                    sleep 0.5
+                    if pgrep -i discord &>/dev/null; then
+                        killall -9 -i discord 2>/dev/null || true
+                        sleep 0.3
+                    fi
+                    stop_spinner
+                    msg_success "Discord stopped ${DIM}(restart manually)${RESET}"
+                    RESTARTED_COUNT=$((RESTARTED_COUNT + 1))
+                else
+                    echo "  ${BRIGHT_BLACK}[${CURRENT_APP}/${TOTAL_APPS}]${RESET} $(icon_info) Discord not running ${DIM}(skipped)${RESET}"
+                    NOT_RUNNING_COUNT=$((NOT_RUNNING_COUNT + 1))
+                fi
+                ;;
+
+            brave)
+                if pgrep -x brave &>/dev/null; then
+                    start_spinner "${BRIGHT_BLACK}[${CURRENT_APP}/${TOTAL_APPS}]${RESET} Stopping ${BRIGHT_YELLOW}Brave${RESET}" "wave"
+                    killall brave 2>/dev/null || true
+                    sleep 0.5
+                    if pgrep -x brave &>/dev/null; then
+                        killall -9 brave 2>/dev/null || true
+                        sleep 0.3
+                    fi
+                    stop_spinner
+                    msg_success "Brave stopped ${DIM}(restart manually)${RESET}"
+                    RESTARTED_COUNT=$((RESTARTED_COUNT + 1))
+                else
+                    echo "  ${BRIGHT_BLACK}[${CURRENT_APP}/${TOTAL_APPS}]${RESET} $(icon_info) Brave not running ${DIM}(skipped)${RESET}"
+                    NOT_RUNNING_COUNT=$((NOT_RUNNING_COUNT + 1))
+                fi
+                ;;
+
+            chromium)
+                if pgrep -x chromium &>/dev/null; then
+                    start_spinner "${BRIGHT_BLACK}[${CURRENT_APP}/${TOTAL_APPS}]${RESET} Stopping ${BRIGHT_CYAN}Chromium${RESET}" "wave"
+                    killall chromium 2>/dev/null || true
+                    sleep 0.5
+                    if pgrep -x chromium &>/dev/null; then
+                        killall -9 chromium 2>/dev/null || true
+                        sleep 0.3
+                    fi
+                    stop_spinner
+                    msg_success "Chromium stopped ${DIM}(restart manually)${RESET}"
+                    RESTARTED_COUNT=$((RESTARTED_COUNT + 1))
+                else
+                    echo "  ${BRIGHT_BLACK}[${CURRENT_APP}/${TOTAL_APPS}]${RESET} $(icon_info) Chromium not running ${DIM}(skipped)${RESET}"
+                    NOT_RUNNING_COUNT=$((NOT_RUNNING_COUNT + 1))
+                fi
+                ;;
+
+            *)
+                msg_warning "Unknown app: $app ${DIM}(skipped)${RESET}"
+                ;;
+        esac
+    done
+
+else
+    msg_info "Skipping app restarts"
+fi
+
+echo ""
+
+# Summary with gem icon
+print_summary "Refresh Complete" \
+    "$(icon_check) Cache rebuilt:  ${BRIGHT_GREEN}✓${RESET}" \
+    "$(icon_rocket) Apps stopped:   ${BRIGHT_CYAN}${RESTARTED_COUNT}${RESET}" \
+    "$(icon_skip) Skipped:        ${DIM}${NOT_RUNNING_COUNT}${RESET} ${DIM}(not running)${RESET}"
+
+echo ""
+print_box_top 68
+print_box_row "$(icon_info) ${BOLD}Next Steps:${RESET}" 68
+print_box_separator 68
+print_box_row "  ${BRIGHT_BLACK}1.${RESET} Restart apps manually (if killed)" 68
+print_box_row "  ${BRIGHT_BLACK}2.${RESET} Check font picker in apps to verify new fonts" 68
+print_box_row "  ${BRIGHT_BLACK}3.${RESET} Use ${CYAN}font-list-active${RESET} to see activated fonts" 68
+print_box_bottom 68
+echo ""
+
+# Celebration animation
+celebrate
+echo ""

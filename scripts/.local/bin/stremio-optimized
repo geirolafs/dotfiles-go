@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# Optimized Stremio launcher for Asahi Linux ARM64
+# Fixes Qt WebEngine GPU rendering and audio crackling issues
+
+set -euo pipefail
+
+# ===== GPU ACCELERATION =====
+# Force Asahi GPU (Vulkan) instead of software renderer (llvmpipe)
+export VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/asahi_icd.aarch64.json
+export MESA_LOADER_DRIVER_OVERRIDE=asahi
+
+# ===== QT PLATFORM FIX =====
+# CRITICAL: Use XWayland (xcb) instead of native Wayland
+# Qt WebEngine fails to initialize GPU context on Wayland with Asahi
+# This causes fallback to software rendering (llvmpipe)
+export QT_QPA_PLATFORM=xcb
+
+# Qt optimizations
+export QT_LOGGING_RULES="*.debug=false;qt.qpa.*=false"
+
+# ===== AUDIO OPTIMIZATION =====
+# Combat excessive crackling from 5.1→stereo downmix + Asahi audio issues
+export PIPEWIRE_LATENCY=512/48000  # ~10.6ms buffer (up from default)
+export PULSE_LATENCY_MSEC=100      # 100ms for PulseAudio fallback
+export SDL_AUDIODRIVER=pipewire    # Prefer PipeWire for all audio
+
+# ===== MPV SETTINGS =====
+# Note: Stremio uses libmpv which ignores ~/.config/mpv/mpv.conf
+# These settings are hardcoded in Stremio's source code
+export MPV_PROFILE=stremio
+
+# Launch Stremio
+exec /opt/stremio/stremio "$@"
