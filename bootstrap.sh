@@ -12,6 +12,8 @@ cd "$HOME/.dotfiles"
 stow hypr
 stow waybar
 stow zsh
+stow bash
+stow xcompose
 stow alacritty
 stow fastfetch
 stow ghostty
