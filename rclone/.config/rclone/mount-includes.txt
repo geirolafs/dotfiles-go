@@ -4,7 +4,6 @@
 
 # Your specified folders
 /HD/**
-/fontlib/**
 
 # The fontlib folder will be:
 # - Visible in the mount for browsing

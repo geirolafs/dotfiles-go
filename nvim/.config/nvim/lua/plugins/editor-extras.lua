@@ -69,5 +69,5 @@ return {
   --   - In-place rename (press 'i')
   --   - Create/delete files
   -- Note: Coexists with neo-tree (<leader>e) - use whichever you prefer!
-  { import = "lazyvim.plugins.extras.editor.mini-files" },
+  -- { import = "lazyvim.plugins.extras.editor.mini-files" },
 }
