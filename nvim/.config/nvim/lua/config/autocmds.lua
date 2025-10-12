@@ -36,3 +36,56 @@ vim.api.nvim_create_autocmd("User", {
     end, 50) -- 50ms delay after VeryLazy
   end,
 })
+
+-- ============================================
+-- Auto-formatting on Save (Biome)
+-- ============================================
+
+-- Create an augroup to organize formatting autocmds
+local format_group = vim.api.nvim_create_augroup("BiomeFormatting", { clear = true })
+
+-- Lint, format, and organize imports with Biome on save
+vim.api.nvim_create_autocmd("BufWritePre", {
+  group = format_group,
+  pattern = {
+    "*.ts",
+    "*.tsx",
+    "*.js",
+    "*.jsx",
+  },
+  callback = function(args)
+    -- Biome check handles linting, formatting, and import organization in one pass
+    require("conform").format({ bufnr = args.buf, timeout_ms = 2000 })
+  end,
+  desc = "Lint, format, and organize imports with Biome on save",
+})
+
+-- JSON files - lint and format with Biome
+vim.api.nvim_create_autocmd("BufWritePre", {
+  group = format_group,
+  pattern = {
+    "*.json",
+    "*.jsonc",
+  },
+  callback = function(args)
+    require("conform").format({ bufnr = args.buf, timeout_ms = 2000 })
+  end,
+  desc = "Lint and format JSON with Biome on save",
+})
+
+-- CSS/SCSS/HTML/Markdown - format with Prettier
+vim.api.nvim_create_autocmd("BufWritePre", {
+  group = format_group,
+  pattern = {
+    "*.css",
+    "*.scss",
+    "*.html",
+    "*.md",
+    "*.yaml",
+    "*.yml",
+  },
+  callback = function(args)
+    require("conform").format({ bufnr = args.buf, timeout_ms = 2000 })
+  end,
+  desc = "Format CSS/SCSS/HTML/Markdown/YAML with Prettier on save",
+})

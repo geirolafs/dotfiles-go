@@ -9,6 +9,9 @@ return {
 		"neovim/nvim-lspconfig",
 		opts = {
 			servers = {
+				-- Biome LSP for real-time linting and diagnostics
+				biome = {},
+
 				-- TypeScript Language Server with Next.js optimizations
 				tsserver = {
 					settings = {
@@ -39,9 +42,18 @@ return {
 
 				-- Tailwind CSS Language Server with v4 support
 				tailwindcss = {
+					-- Help LSP find Tailwind v4 CSS-based config
+					root_dir = require("lspconfig.util").root_pattern(
+						"tailwind.config.js",
+						"tailwind.config.ts",
+						"postcss.config.js",
+						"package.json"
+					),
 					settings = {
 						tailwindCSS = {
 							experimental = {
+								-- Point to CSS file with @theme configuration (Tailwind v4)
+								configFile = "src/styles/globals.css",
 								classRegex = {
 									-- Enable for various string patterns
 									"class[Nn]ame[s]?\\s*[:=]\\s*['\"`]([^'\"`]*)['\"`]",
@@ -101,18 +113,23 @@ return {
 	-- ========================================
 
 	-- conform.nvim for intelligent formatting
+	-- Note: biome-check runs "biome check --write" which:
+	--   - Formats code according to biome.jsonc rules
+	--   - Fixes linting errors (safe fixes by default)
+	--   - Organizes and sorts imports
+	--   - Sorts JSX attributes (per ultracite config)
 	{
 		"stevearc/conform.nvim",
 		optional = true,
 		opts = {
 			formatters_by_ft = {
-				-- Use Biome for JS/TS (ultra-fast)
-				javascript = { "biome" },
-				typescript = { "biome" },
-				javascriptreact = { "biome" },
-				typescriptreact = { "biome" },
-				json = { "biome" },
-				jsonc = { "biome" },
+				-- Use Biome for JS/TS/JSON (ultra-fast, with linting + import sorting)
+				javascript = { "biome-check" },
+				typescript = { "biome-check" },
+				javascriptreact = { "biome-check" },
+				typescriptreact = { "biome-check" },
+				json = { "biome-check" },
+				jsonc = { "biome-check" },
 
 				-- Use Prettier for other formats
 				css = { "prettier" },
@@ -124,13 +141,7 @@ return {
 				-- Lua formatting
 				lua = { "stylua" },
 			},
-			formatters = {
-				biome = {
-					command = "biome",
-					args = { "format", "--stdin-file-path", "$FILENAME" },
-					stdin = true,
-				},
-			},
+			-- No custom formatters needed - conform.nvim has built-in biome-check support
 		},
 	},
 

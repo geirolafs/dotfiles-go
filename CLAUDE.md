@@ -200,6 +200,37 @@ font-refresh --skip-cache              # Only restart apps
 - Clean broken symlinks: `font-list-active -b` then remove manually
 - Verify activation: `font-list-active -v` shows detailed stats
 
+### Browser Extension Management
+Chromium extensions are documented in the dotfiles but cannot be automatically installed. The extension list serves as a reference for setting up browsers on new systems.
+
+```bash
+# List currently installed extensions (human-readable)
+chromium-list-extensions
+
+# Generate markdown documentation
+chromium-list-extensions markdown
+
+# Update extensions.md after installing/removing extensions
+chromium-list-extensions markdown > ~/.dotfiles/chromium/.config/chromium/extensions.md
+
+# View documented extensions
+cat ~/.dotfiles/chromium/.config/chromium/extensions.md
+```
+
+**Extension installation methods:**
+1. **Chrome Web Store** (recommended): Visit URLs in `extensions.md` and click "Add to Chrome"
+2. **Manual CRX**: Download `.crx` file, enable Developer mode in `chrome://extensions`, drag and drop
+3. **Load unpacked** (development): Add `--load-extension=/path/to/extension` to `chromium-flags.conf`
+
+**Extension configuration:**
+- Some extensions support exporting settings to JSON
+- Store exported settings in `chromium/.config/chromium/extension-settings/`
+- Import manually on new systems
+
+**Extension list location:**
+- `chromium/.config/chromium/extensions.md` - Documented list with names, IDs, versions, and URLs
+- Includes 16 extensions: 1Password, SEO tools (Ahrefs, BuiltWith, Wappalyzer), design tools (CSS Peeper, Stylebot), and developer utilities
+
 ### Asahi-Specific Utilities
 ```bash
 # Figma with trackpad workarounds (disables "disable_while_typing" for space bar hand tool)
@@ -312,7 +343,10 @@ Themes are stored in `omarchy/.local/share/omarchy/themes/<theme-name>/`:
 - `zsh/` - Shell configuration
 - `starship/` - Shell prompt configuration (`.config/starship.toml`)
 - `brave/` - Brave browser Wayland flags (`.config/brave-flags.conf`)
-- `chromium/` - Chromium browser Wayland flags (`.config/chromium-flags.conf`)
+- `chromium/` - Chromium browser configuration:
+  - Wayland flags (`.config/chromium-flags.conf`)
+  - Extension documentation (`.config/chromium/extensions.md`)
+  - Extension management utility (`.local/bin/chromium-list-extensions`)
 
 **Utility modules**:
 - `omarchy/` - Theme files (`.local/share/omarchy/themes/`) and theme management scripts (`.local/share/omarchy/bin/omarchy-theme-set`)
