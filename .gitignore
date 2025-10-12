@@ -75,3 +75,13 @@ rclone/.config/rclone/rclone.conf
 
 # Temporary figma input configs
 hypr/.config/hypr/*.figma.tmp
+
+# Wake-on-LAN configs (stored in Dropbox - contains Tailscale IPs and hostnames)
+WAKE-ON-LAN-SETUP.md
+scripts/.local/bin/wake-imac
+wol-setup/
+
+# Intel deployment guides (stored in Dropbox - contains hardware-specific info)
+DEPLOY-INTEL-IMAC.md
+INTEL-QUICK-START.md
+deploy-intel.sh
