@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Name=Nord VPN
+Comment=Nord VPN
+Exec=/home/m9/.local/bin/nordvpn-tui
+Terminal=false
+Type=Application
+Icon=/home/m9/.local/share/applications/icons/Nord VPN.png
+StartupNotify=true

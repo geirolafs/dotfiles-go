@@ -56,6 +56,11 @@ NOTES.md
 !rclone/.local/
 !rclone/.local/bin/
 
+# Exception for application .desktop entries
+!applications/.local/
+!applications/.local/share/
+!applications/.local/share/applications/
+
 # Temporary patches
 *.patch.local
 *-temp.patch
