@@ -2,10 +2,10 @@
 Version=1.0
 Name=Figma
 Comment=Figma - Design tool with local fonts
-Exec=/home/gogo/.local/bin/figma-chromium-trackpad-fix
+Exec=/home/m9/.local/bin/figma-chromium-trackpad-fix
 Terminal=false
 Type=Application
-Icon=/home/gogo/.local/share/applications/icons/Figma.png
+Icon=/home/m9/.local/share/applications/icons/Figma.png
 Categories=Graphics;Design;
 StartupNotify=true
 StartupWMClass=chromium

@@ -8,7 +8,7 @@ format = "[$user](bold blue)[@](bold cyan)"
 
 [hostname]
 ssh_only = false
-format = "[$hostname](bold cyan)[: ](bold cyan)"
+format = "[$hostname](bold cyan)[ > ](bold cyan)"
 
 [character]
 error_symbol = "[\\$](bold red)"

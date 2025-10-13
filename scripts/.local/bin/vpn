@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Quick VPN connection to UK (fastest for Iceland)
+# Usage:
+#   vpn          - Connect to UK
+#   vpn off      - Disconnect
+#   vpn <country> - Connect to specific country
+
+if [ "$1" = "off" ] || [ "$1" = "disconnect" ]; then
+  nordvpn disconnect
+elif [ -z "$1" ]; then
+  # No argument = connect to UK (fastest from Iceland)
+  nordvpn connect United_Kingdom
+else
+  # Pass through any other arguments
+  nordvpn connect "$@"
+fi
