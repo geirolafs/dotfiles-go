@@ -17,16 +17,16 @@ success_symbol = "[\\$](bold green)"
 [directory]
 truncation_length = 2
 truncation_symbol = "…/"
-style = "bold cyan"
-repo_root_style = "bold cyan"
+style = "bold blue"
+repo_root_style = "bold blue"
 repo_root_format = "[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style)"
 
 [git_branch]
-format = "[\\[](bold cyan)[gh](bold cyan)[\\(](bold yellow)[$branch](bold yellow)[\\)](bold yellow)"
+format = "[git](bold cyan)[\\(](bold red)[$branch](bold yellow)[\\)](bold red)"
 style = "bold yellow"
 
 [git_status]
-format = '[$all_status$ahead_behind](bold red)[ \\]](bold cyan)'
+format = '[$all_status$ahead_behind](bold red)'
 style = "bold red"
 ahead      = "⇡${count} "
 diverged   = "⇕⇡${ahead_count}⇣${behind_count} "
