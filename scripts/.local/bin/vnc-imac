@@ -52,7 +52,8 @@ fi
 
 # Connect with Remmina (suppress plugin warnings)
 echo "Launching Remmina..."
-remmina -c "vnc://${IMAC_IP}:${VNC_PORT}" 2>/dev/null &
+nohup remmina -c "vnc://${IMAC_IP}:${VNC_PORT}" > /dev/null 2>&1 &
+disown
 
 echo ""
 echo "To disconnect and stop VNC server:"
