@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# Launch NordVPN TUI
+if pgrep -f "class.*nordvpn-tui" >/dev/null; then
+  hyprctl dispatch focuswindow "class:nordvpn-tui"
+else
+  ghostty --class=nordvpn-tui -e zsh -c '
+    clear
+    echo ""
+    echo "::::    :::       ::::::::       :::::::::       :::::::::       "
+    echo ":+:+:   :+:      :+:    :+:      :+:    :+:      :+:    :+:      "
+    echo ":+:+:+  +:+      +:+    +:+      +:+    +:+      +:+    +:+      "
+    echo "+#+ +:+ +#+      +#+    +:+      +#++:++#:       +#+    +:+      "
+    echo "+#+  +#+#+#      +#+    +#+      +#+    +#+      +#+    +#+      "
+    echo "#+#   #+#+#      #+#    #+#      #+#    #+#      #+#    #+#      "
+    echo "###    ####       ########       ###    ###      #########       "
+    echo "      :::     :::      :::::::::       ::::    :::               "
+    echo "      :+:     :+:      :+:    :+:      :+:+:   :+:               "
+    echo "      +:+     +:+      +:+    +:+      :+:+:+  +:+               "
+    echo "      +#+     +:+      +#++:++#+       +#+ +:+ +#+               "
+    echo "       +#+   +#+       +#+             +#+  +#+#+#               "
+    echo "        #+#+#+#        #+#             #+#   #+#+#               "
+    echo "          ###          ###             ###    ####               "
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    echo "  🔒 Available Commands:"
+    echo ""
+    echo "     nordvpn login           →       Sign in"
+    echo "     nordvpn connect         →       Connect to VPN"
+    echo "     nordvpn disconnect      →       Disconnect"
+    echo "     nordvpn status          →       Check status"
+    echo "     nordvpn countries       →       List countries"
+    echo "     nordvpn cities          →       List cities"
+    echo "     nordvpn account         →       Account info"
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    exec zsh
+  ' &
+fi
