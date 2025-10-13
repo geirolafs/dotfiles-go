@@ -76,6 +76,9 @@ rclone/.config/rclone/rclone.conf
 # Temporary figma input configs
 hypr/.config/hypr/*.figma.tmp
 
+# Hyprland environment variables (contains sensitive IPs and usernames)
+hypr/.config/hypr/envs.conf
+
 # Wake-on-LAN configs (stored in Dropbox - contains Tailscale IPs and hostnames)
 WAKE-ON-LAN-SETUP.md
 scripts/.local/bin/wake-imac

@@ -115,23 +115,29 @@ systemctl --user restart wireplumber
 
 ### Environment Variables
 
-Some scripts require environment variables to be set. Add these to `~/.zshrc` or `~/.zshenv`:
+Some scripts require environment variables. These are set in `hypr/.config/hypr/envs.conf` (gitignored).
 
+**Setup:**
 ```bash
-# iMac Remote Access (required for vnc-imac)
-export IMAC_IP="<tailscale-ip>"      # Tailscale IP of iMac
-export IMAC_USER="<username>"        # Username on iMac
-export VNC_PORT="5900"               # Optional, defaults to 5900
+# Copy template to create your local envs.conf
+cd ~/.dotfiles/hypr/.config/hypr/
+cp envs.conf.example envs.conf
+
+# Edit with your values
+nano envs.conf
+# Change:
+#   env = IMAC_IP,<your-tailscale-ip>
+#   env = IMAC_USER,<your-username>
+
+# Deploy with stow
+cd ~/.dotfiles
+stow -R hypr
+
+# Reload Hyprland
+hyprctl reload
 ```
 
-**Example:**
-```bash
-# Add to ~/.zshrc
-export IMAC_IP="100.x.x.x"
-export IMAC_USER="username"
-```
-
-Then reload shell: `source ~/.zshrc`
+**Note:** `envs.conf` is gitignored to keep sensitive values (IPs, usernames) out of version control. Environment variables set here are available to all applications launched from Hyprland.
 
 ### Deployment
 ```bash
@@ -273,7 +279,7 @@ dropbox-sync-all           # Sync all Dropbox content
 dropbox-sync-fonts         # Sync fonts from Dropbox
 
 # iMac remote access (Tailscale VNC) - optimized for best performance
-# Requires environment variables: IMAC_IP, IMAC_USER (set in ~/.zshrc)
+# Requires environment variables: IMAC_IP, IMAC_USER (set in hypr/envs.conf)
 vnc-imac                   # Connect to iMac via VNC (from MBP)
 imac-vnc-start             # Start optimized VNC server (on iMac)
 imac-vnc-stop              # Stop VNC and restart hypridle (on iMac)

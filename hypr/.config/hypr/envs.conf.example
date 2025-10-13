@@ -1,0 +1,10 @@
+# Extra env variables
+# env = MY_GLOBAL_ENV,setting
+
+# iMac remote access (for VNC scripts)
+# Copy this file to envs.conf and fill in your values:
+#   cp envs.conf.example envs.conf
+#
+# Then edit envs.conf with your actual Tailscale IP and username
+env = IMAC_IP,<your-tailscale-ip>
+env = IMAC_USER,<your-username>
