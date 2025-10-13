@@ -1,8 +1,8 @@
 # Oh My Zsh configuration
 export ZSH="$HOME/.oh-my-zsh"
 
-# Theme configuration - using robbyrussell for simplicity and speed
-ZSH_THEME="robbyrussell"
+# Theme configuration - disabled to use starship prompt instead
+ZSH_THEME=""
 
 # Plugin configuration - your optimized selection
 plugins=(
@@ -90,3 +90,6 @@ export PROMPT_EOL_MARK=""
 # . "$HOME/.local/share/../bin/env"  # Commented out - file doesn't exist
 export PATH="$HOME/.cache/.bun/bin:$PATH"
 eval "$(mise activate zsh)"
+
+# Initialize starship prompt
+eval "$(starship init zsh)"
