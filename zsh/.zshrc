@@ -23,8 +23,8 @@ source $ZSH/oh-my-zsh.sh
 # Add your own exports, aliases, and functions here.
 # This section will override any conflicting settings from Omarchy
 
-# aliases 
-alias dotfiles='cd ~/.dotfiles/ && l' 
+# aliases
+alias dotfiles='cd ~/.dotfiles/ && l'
 alias docs='cd ~/Documents/ && l'
 alias y='yazi'
 dev() {
@@ -34,6 +34,47 @@ dev() {
     prj) cd ~/Developer/Projects/ && l ;;
     *) cd ~/Developer/ && l ;;
   esac
+}
+
+# 1Password CLI shortcuts
+alias ops='eval $(op signin)'  # Quick signin
+
+# Fuzzy find and view item details
+opf() {
+  local item=$(op item list --format=json | jq -r '.[] | .title' | fzf --prompt="1Password > ")
+  [[ -n "$item" ]] && op item get "$item"
+}
+
+# Fuzzy find and copy password to clipboard
+opc() {
+  local item=$(op item list --format=json | jq -r '.[] | .title' | fzf --prompt="Copy password > ")
+  if [[ -n "$item" ]]; then
+    local password=$(op item get "$item" --fields password --reveal)
+    if [[ -n "$SSH_CONNECTION" ]]; then
+      # Over SSH - print password (can be selected/copied manually)
+      echo "Password: $password"
+    else
+      # Local session - copy to clipboard
+      echo -n "$password" | wl-copy
+      echo "✓ Password copied to clipboard"
+    fi
+  fi
+}
+
+# Fuzzy find and copy username to clipboard
+opn() {
+  local item=$(op item list --format=json | jq -r '.[] | .title' | fzf --prompt="Copy username > ")
+  if [[ -n "$item" ]]; then
+    local username=$(op item get "$item" --fields username --reveal)
+    if [[ -n "$SSH_CONNECTION" ]]; then
+      # Over SSH - print username (can be selected/copied manually)
+      echo "Username: $username"
+    else
+      # Local session - copy to clipboard
+      echo -n "$username" | wl-copy
+      echo "✓ Username copied to clipboard"
+    fi
+  fi
 }
 
 # History configuration
