@@ -1,24 +1,25 @@
 add_newline = true
 command_timeout = 200
-format = "[$directory$git_branch$git_status]($style)\n$character"
+format = "$directory[ →](bold cyan)$git_branch$git_status$character"
 
 [character]
-error_symbol = "[✗](bold cyan)"
-success_symbol = "[❯](bold cyan)"
+error_symbol = "[ ❯](bold red)"
+success_symbol = "[ ❯](bold green)"
 
 [directory]
 truncation_length = 2
 truncation_symbol = "…/"
+style = "bold cyan"
 repo_root_style = "bold cyan"
-repo_root_format = "[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) "
+repo_root_format = "[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style)"
 
 [git_branch]
-format = " git:($branch) "
+format = "[ git:](bold cyan)[\\(](bold yellow)[$branch](bold yellow)[\\)](bold yellow)"
 style = "bold yellow"
 
 [git_status]
-format     = '[$all_status]($style)'
-style      = "cyan"
+format = '[ $all_status$ahead_behind](bold red)'
+style = "bold red"
 ahead      = "⇡${count} "
 diverged   = "⇕⇡${ahead_count}⇣${behind_count} "
 behind     = "⇣${count} "
