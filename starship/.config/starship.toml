@@ -1,6 +1,10 @@
 add_newline = true
 command_timeout = 200
-format = "$directory[ →](bold cyan)$git_branch$git_status$character"
+format = "$username$directory[ →](bold cyan)$git_branch$git_status$character"
+
+[username]
+show_always = true
+format = "[$user](bold blue)[@](bold cyan)"
 
 [character]
 error_symbol = "[ ❯](bold red)"
