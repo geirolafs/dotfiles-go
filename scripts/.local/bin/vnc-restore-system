@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Restore system settings after VNC BEAST MODE (run on iMac)
+
+set -euo pipefail
+
+echo "🔄 Restoring system to normal settings..."
+echo ""
+
+# Restore default TCP settings
+echo "📡 Restoring TCP buffers..."
+sudo sysctl -w net.core.rmem_max=212992 2>/dev/null || echo "  (rmem_max restore failed)"
+sudo sysctl -w net.core.wmem_max=212992 2>/dev/null || echo "  (wmem_max restore failed)"
+sudo sysctl -w net.ipv4.tcp_rmem='4096 131072 6291456' 2>/dev/null || echo "  (tcp_rmem restore failed)"
+sudo sysctl -w net.ipv4.tcp_wmem='4096 16384 4194304' 2>/dev/null || echo "  (tcp_wmem restore failed)"
+
+# Re-enable TCP slow start
+echo "⚡ Re-enabling TCP slow start..."
+sudo sysctl -w net.ipv4.tcp_slow_start_after_idle=1 2>/dev/null || echo "  (slow start restore failed)"
+
+# Restore swappiness
+echo "💾 Restoring swappiness..."
+sudo sysctl -w vm.swappiness=60 2>/dev/null || echo "  (swappiness restore failed)"
+
+# Restore Hyprland effects
+if command -v hyprctl >/dev/null 2>&1; then
+    echo "🎨 Restoring Hyprland effects..."
+    hyprctl keyword decoration:blur:enabled true 2>/dev/null || true
+    hyprctl keyword decoration:drop_shadow true 2>/dev/null || true
+    hyprctl keyword animations:enabled true 2>/dev/null || true
+
+    # Reload to restore all config settings
+    hyprctl reload 2>/dev/null || true
+fi
+
+echo ""
+echo "✅ System restored to normal settings"
