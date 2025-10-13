@@ -30,19 +30,29 @@ fi
 
 echo "Connecting to iMac VNC..."
 
-# Start VNC server on iMac
-echo "Starting VNC server on iMac..."
-ssh "${IMAC_USER}@${IMAC_IP}" 'imac-vnc-start' || {
-    echo "Warning: Could not start VNC server via script, trying legacy command..."
-    ssh "${IMAC_USER}@${IMAC_IP}" 'systemctl --user stop hypridle && WAYLAND_DISPLAY=wayland-1 wayvnc --gpu --max-fps=120 0.0.0.0 5900 &'
-}
+# Check if VNC server is already running
+if ssh "${IMAC_USER}@${IMAC_IP}" 'pgrep -x wayvnc > /dev/null'; then
+    echo "VNC server already running on iMac"
+else
+    echo "Starting VNC server on iMac..."
 
-# Give VNC server time to start
-sleep 2
+    # Try using the helper script first
+    if ssh "${IMAC_USER}@${IMAC_IP}" 'command -v imac-vnc-start > /dev/null'; then
+        ssh "${IMAC_USER}@${IMAC_IP}" 'imac-vnc-start' &
+    else
+        # Fallback to legacy command if script not deployed
+        echo "Note: Helper scripts not deployed on iMac, using legacy command"
+        ssh "${IMAC_USER}@${IMAC_IP}" 'systemctl --user stop hypridle 2>/dev/null; WAYLAND_DISPLAY=wayland-1 nohup wayvnc --gpu --max-fps=120 0.0.0.0 5900 > /dev/null 2>&1 &'
+    fi
 
-# Connect with Remmina
+    # Give VNC server time to start
+    echo "Waiting for server to start..."
+    sleep 3
+fi
+
+# Connect with Remmina (suppress plugin warnings)
 echo "Launching Remmina..."
-remmina -c "vnc://${IMAC_IP}:${VNC_PORT}"
+remmina -c "vnc://${IMAC_IP}:${VNC_PORT}" 2>/dev/null &
 
 echo ""
 echo "To disconnect and stop VNC server:"
