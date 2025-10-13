@@ -24,11 +24,6 @@ stow applications
 stow yazi
 stow gtk
 stow systemd
-stow pipewire
-stow wireplumber
-stow asahi-audio-custom
-stow easyeffects
-stow sync-system-font
 stow mpv
 stow mise
 stow omarchy
