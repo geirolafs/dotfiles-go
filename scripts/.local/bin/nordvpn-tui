@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Launch NordVPN TUI
-if pgrep -f "class.*nordvpn-tui" >/dev/null; then
-  hyprctl dispatch focuswindow "class:nordvpn-tui"
+if pgrep -f "nordvpn-tui" >/dev/null; then
+  hyprctl dispatch focuswindow "title:NORD VPN"
 else
-  ghostty --class=nordvpn-tui -e zsh -c '
+  ghostty --title="NORD VPN" -e zsh -c '
     clear
     echo ""
     echo "::::    :::       ::::::::       :::::::::       :::::::::       "
