@@ -7,10 +7,27 @@ MOUNT_DIR="$HOME/Dropbox/Mount"
 INCLUDE_FILE="$HOME/.config/rclone/mount-includes.txt"
 REMOTE="dropbox:"
 
-# Check if already mounted
-if mountpoint -q "$MOUNT_DIR"; then
-    echo "✓ Dropbox is already mounted at $MOUNT_DIR"
-    exit 0
+# Ensure mount directory exists
+if [[ ! -d "$MOUNT_DIR" ]]; then
+    echo "→ Creating mount directory: $MOUNT_DIR"
+    mkdir -p "$MOUNT_DIR"
+fi
+
+# Check for stale mount and clean it up
+if mountpoint -q "$MOUNT_DIR" 2>/dev/null; then
+    # Check if mount is actually working by trying to access it
+    if ! timeout 2 ls "$MOUNT_DIR" &>/dev/null; then
+        echo "→ Detected stale mount, cleaning up..."
+        if command -v fusermount3 &>/dev/null; then
+            fusermount3 -u "$MOUNT_DIR" 2>/dev/null || true
+        elif command -v fusermount &>/dev/null; then
+            fusermount -u "$MOUNT_DIR" 2>/dev/null || true
+        fi
+        sleep 1
+    else
+        echo "✓ Dropbox is already mounted at $MOUNT_DIR"
+        exit 0
+    fi
 fi
 
 # Check if rclone is configured
@@ -35,22 +52,32 @@ echo "  Visible folders:"
 grep -v '^#' "$INCLUDE_FILE" | grep -v '^$' | sed 's/^/    /'
 
 # Mount with selective visibility and minimal caching
+# Log file for debugging: ~/.cache/rclone/dropbox-mount.log
+LOG_FILE="$HOME/.cache/rclone/dropbox-mount.log"
+mkdir -p "$(dirname "$LOG_FILE")"
+
 rclone mount "$REMOTE" "$MOUNT_DIR" \
     --include-from "$INCLUDE_FILE" \
     --vfs-cache-mode minimal \
     --vfs-cache-max-size 2G \
     --vfs-cache-max-age 24h \
     --daemon \
-    --log-level INFO
+    --log-level INFO \
+    --log-file "$LOG_FILE"
 
 # Wait a moment for mount to establish
 sleep 2
 
-if mountpoint -q "$MOUNT_DIR"; then
+# Verify mount succeeded and is accessible
+if mountpoint -q "$MOUNT_DIR" && timeout 5 ls "$MOUNT_DIR" &>/dev/null; then
     echo "✓ Dropbox mounted successfully at $MOUNT_DIR"
     echo "  Cache: 2GB max, 24h retention"
+    echo "  Logs: $LOG_FILE"
     echo "  Run 'dropbox-unmount' to unmount"
 else
     echo "✗ Failed to mount Dropbox"
+    echo "  Check logs: $LOG_FILE"
+    echo "  Last few log lines:"
+    tail -10 "$LOG_FILE" 2>/dev/null | sed 's/^/    /'
     exit 1
 fi

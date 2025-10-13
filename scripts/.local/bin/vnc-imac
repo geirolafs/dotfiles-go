@@ -30,9 +30,9 @@ fi
 
 echo "Connecting to iMac VNC..."
 
-# Always stop hypridle and wake display
+# Always stop hypridle to prevent screen blanking
 echo "Ensuring display stays on..."
-ssh "${IMAC_USER}@${IMAC_IP}" 'systemctl --user stop hypridle 2>/dev/null || true; sleep 0.5; hyprctl dispatch dpms on 2>/dev/null || true'
+ssh "${IMAC_USER}@${IMAC_IP}" 'systemctl --user stop hypridle 2>/dev/null || true'
 
 # Check if VNC server is already running
 if ssh "${IMAC_USER}@${IMAC_IP}" 'pgrep -x wayvnc > /dev/null'; then

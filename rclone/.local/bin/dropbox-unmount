@@ -5,32 +5,64 @@ set -euo pipefail
 
 MOUNT_DIR="$HOME/Dropbox/Mount"
 
-# Check if mounted
-if ! mountpoint -q "$MOUNT_DIR"; then
-    echo "✓ Dropbox is not mounted"
+# Check if directory exists
+if [[ ! -d "$MOUNT_DIR" ]]; then
+    echo "✓ Mount directory doesn't exist (nothing to unmount)"
     exit 0
+fi
+
+# Check if mounted (including stale mounts)
+if ! mountpoint -q "$MOUNT_DIR" 2>/dev/null; then
+    # Double-check by trying to access it
+    if timeout 2 ls "$MOUNT_DIR" &>/dev/null; then
+        echo "✓ Dropbox is not mounted"
+        exit 0
+    fi
+    # If ls fails but mountpoint says not mounted, it might be stale
+    echo "→ Detected possible stale mount, attempting cleanup..."
 fi
 
 echo "→ Unmounting Dropbox..."
 
-# Try fusermount first (preferred method)
+# Try fusermount first (preferred method for FUSE)
+UNMOUNT_SUCCESS=false
 if command -v fusermount3 &>/dev/null; then
-    fusermount3 -u "$MOUNT_DIR" 2>/dev/null || true
+    if fusermount3 -u "$MOUNT_DIR" 2>/dev/null; then
+        UNMOUNT_SUCCESS=true
+    fi
 elif command -v fusermount &>/dev/null; then
-    fusermount -u "$MOUNT_DIR" 2>/dev/null || true
+    if fusermount -u "$MOUNT_DIR" 2>/dev/null; then
+        UNMOUNT_SUCCESS=true
+    fi
 fi
 
 # Give it a moment
 sleep 1
 
-# Check if still mounted and try umount as fallback
-if mountpoint -q "$MOUNT_DIR"; then
-    umount "$MOUNT_DIR" 2>/dev/null || true
+# Try umount as fallback if fusermount didn't work
+if [[ "$UNMOUNT_SUCCESS" != "true" ]] && mountpoint -q "$MOUNT_DIR" 2>/dev/null; then
+    if umount "$MOUNT_DIR" 2>/dev/null; then
+        UNMOUNT_SUCCESS=true
+    fi
+    sleep 1
 fi
 
-# Final check
-if mountpoint -q "$MOUNT_DIR"; then
-    echo "✗ Failed to unmount Dropbox"
+# Try lazy unmount as last resort for stubborn stale mounts
+if mountpoint -q "$MOUNT_DIR" 2>/dev/null; then
+    echo "  Trying lazy unmount..."
+    umount -l "$MOUNT_DIR" 2>/dev/null || true
+    sleep 1
+fi
+
+# Final verification
+if mountpoint -q "$MOUNT_DIR" 2>/dev/null && ! timeout 2 ls "$MOUNT_DIR" &>/dev/null; then
+    echo "✗ Failed to unmount Dropbox (stale mount persists)"
+    echo "  Try manual cleanup:"
+    echo "    fusermount -uz $MOUNT_DIR"
+    echo "    sudo umount -l $MOUNT_DIR"
+    exit 1
+elif mountpoint -q "$MOUNT_DIR" 2>/dev/null; then
+    echo "✗ Failed to unmount Dropbox (mount still active)"
     echo "  Try: fusermount -u $MOUNT_DIR"
     exit 1
 else
