@@ -1,6 +1,9 @@
 # Dynamic theme colors
 config-file = ?"~/.config/omarchy/current/theme/ghostty.conf"
 
+# Shell - explicitly use zsh
+command = /usr/bin/zsh
+
 # Font
 font-family = "SF Mono"
 font-style = Regular
