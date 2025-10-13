@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Stop VNC server on iMac and restart hypridle
+# Run this script on the iMac or via SSH
+
+set -euo pipefail
+
+echo "Stopping wayvnc..."
+if pgrep -x wayvnc > /dev/null; then
+    pkill wayvnc
+    echo "wayvnc stopped"
+else
+    echo "wayvnc was not running"
+fi
+
+echo "Starting hypridle..."
+systemctl --user start hypridle
+
+echo "VNC server stopped. Display will blank after idle timeout."

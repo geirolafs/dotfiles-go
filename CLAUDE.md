@@ -113,6 +113,26 @@ systemctl --user restart wireplumber
 
 ## Commands
 
+### Environment Variables
+
+Some scripts require environment variables to be set. Add these to `~/.zshrc` or `~/.zshenv`:
+
+```bash
+# iMac Remote Access (required for vnc-imac)
+export IMAC_IP="<tailscale-ip>"      # Tailscale IP of iMac
+export IMAC_USER="<username>"        # Username on iMac
+export VNC_PORT="5900"               # Optional, defaults to 5900
+```
+
+**Example:**
+```bash
+# Add to ~/.zshrc
+export IMAC_IP="100.x.x.x"
+export IMAC_USER="username"
+```
+
+Then reload shell: `source ~/.zshrc`
+
 ### Deployment
 ```bash
 # Deploy all dotfiles (creates symlinks in home directory)
@@ -251,6 +271,16 @@ dropbox-mount              # Mount Dropbox via rclone
 dropbox-unmount            # Unmount Dropbox
 dropbox-sync-all           # Sync all Dropbox content
 dropbox-sync-fonts         # Sync fonts from Dropbox
+
+# iMac remote access (Tailscale VNC) - optimized for best performance
+# Requires environment variables: IMAC_IP, IMAC_USER (set in ~/.zshrc)
+vnc-imac                   # Connect to iMac via VNC (from MBP)
+imac-vnc-start             # Start optimized VNC server (on iMac)
+imac-vnc-stop              # Stop VNC and restart hypridle (on iMac)
+
+# Tailscale connection diagnostics
+tailscale ping $IMAC_IP    # Check connection type and latency
+tailscale status           # Show all devices on tailnet
 ```
 
 ### Debugging and Testing

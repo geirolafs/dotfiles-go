@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# Start optimized VNC server on iMac for best performance
+# Run this script on the iMac or via SSH
+
+set -euo pipefail
+
+# Stop hypridle to prevent screen blanking
+echo "Stopping hypridle..."
+systemctl --user stop hypridle
+
+# Set Wayland display
+export WAYLAND_DISPLAY=wayland-1
+
+# Check if wayvnc is already running
+if pgrep -x wayvnc > /dev/null; then
+    echo "wayvnc is already running. Stopping it first..."
+    pkill wayvnc
+    sleep 1
+fi
+
+# Start wayvnc with optimized settings
+echo "Starting wayvnc with optimized settings..."
+echo "  - GPU acceleration enabled"
+echo "  - Max FPS: 120 (allows 60fps without capping)"
+echo "  - Listening on: 0.0.0.0:5900"
+
+# Start wayvnc in background
+wayvnc \
+    --gpu \
+    --max-fps=120 \
+    0.0.0.0 5900 &
+
+VNC_PID=$!
+
+echo "VNC server started (PID: $VNC_PID)"
+echo ""
+echo "Connect with Remmina from remote machine"
+echo ""
+echo "To stop VNC server:"
+echo "  imac-vnc-stop"

@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# Connect to iMac via VNC with optimized settings
+# Automatically starts VNC server on iMac if not running
+#
+# Required environment variables:
+#   IMAC_IP      - Tailscale IP of iMac
+#   IMAC_USER    - Username on iMac
+# Optional:
+#   VNC_PORT     - VNC port (default: 5900)
+
+set -euo pipefail
+
+# Read environment variables
+IMAC_IP="${IMAC_IP:-}"
+IMAC_USER="${IMAC_USER:-}"
+VNC_PORT="${VNC_PORT:-5900}"
+
+# Validate required variables
+if [[ -z "$IMAC_IP" ]]; then
+    echo "Error: IMAC_IP environment variable is required"
+    echo "Example: export IMAC_IP=100.x.x.x"
+    exit 1
+fi
+
+if [[ -z "$IMAC_USER" ]]; then
+    echo "Error: IMAC_USER environment variable is required"
+    echo "Example: export IMAC_USER=username"
+    exit 1
+fi
+
+echo "Connecting to iMac VNC..."
+
+# Start VNC server on iMac
+echo "Starting VNC server on iMac..."
+ssh "${IMAC_USER}@${IMAC_IP}" 'imac-vnc-start' || {
+    echo "Warning: Could not start VNC server via script, trying legacy command..."
+    ssh "${IMAC_USER}@${IMAC_IP}" 'systemctl --user stop hypridle && WAYLAND_DISPLAY=wayland-1 wayvnc --gpu --max-fps=120 0.0.0.0 5900 &'
+}
+
+# Give VNC server time to start
+sleep 2
+
+# Connect with Remmina
+echo "Launching Remmina..."
+remmina -c "vnc://${IMAC_IP}:${VNC_PORT}"
+
+echo ""
+echo "To disconnect and stop VNC server:"
+echo "  ssh ${IMAC_USER}@${IMAC_IP} 'imac-vnc-stop'"
