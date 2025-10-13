@@ -88,3 +88,7 @@ wol-setup/
 DEPLOY-INTEL-IMAC.md
 INTEL-QUICK-START.md
 deploy-intel.sh
+
+# AUR build directories
+1password-cli/
+nordvpn-bin/
