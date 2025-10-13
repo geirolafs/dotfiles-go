@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Launch NordVPN TUI
-if pgrep -f "nordvpn-tui" >/dev/null; then
+if pgrep -f "ghostty.*NORD VPN" >/dev/null; then
   hyprctl dispatch focuswindow "title:NORD VPN"
 else
   ghostty --title="NORD VPN" -e zsh -c '
