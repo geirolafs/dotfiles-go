@@ -1,5 +1,46 @@
 include "%H/.local/share/omarchy/default/xcompose"
 
 # Identification
-<Multi_key> <space> <n> : ""
-<Multi_key> <space> <e> : ""
+<Multi_key> <space> <n> : "geir olafsson"
+<Multi_key> <space> <e> : "olafsson@geir.is"
+<Multi_key> <space> <w> : "geir.is"  # Website/portfolio URL
+<Multi_key> <space> <p> : "+354 692 5737"  # Phone number
+
+# Arrows
+<Multi_key> <l> <a> : "→"  # Arrow right
+<Multi_key> <l> <l> : "←"  # Arrow left
+<Multi_key> <l> <u> : "↑"  # Arrow up
+<Multi_key> <l> <d> : "↓"  # Arrow down
+<Multi_key> <l> <e> : "⇒"  # Double arrow (implies)
+<Multi_key> <l> <2> : "⇔"  # Double arrow both ways
+
+# Math symbols
+<Multi_key> <n> <e> : "≠"  # Not equal
+<Multi_key> <l> <e> : "≤"  # Less or equal
+<Multi_key> <g> <e> : "≥"  # Greater or equal
+<Multi_key> <i> <n> : "∈"  # Element of
+<Multi_key> <i> <f> : "∞"  # Infinity
+<Multi_key> <s> <u> : "∑"  # Sum
+<Multi_key> <p> <i> : "π"  # Pi
+<Multi_key> <d> <e> : "°"  # Degree
+<Multi_key> <+> <-> : "±"  # Plus-minus
+
+# Checkmarks and status
+<Multi_key> <c> <k> : "✓"  # Check
+<Multi_key> <c> <x> : "✗"  # X mark
+<Multi_key> <c> <w> : "⚠"  # Warning
+<Multi_key> <c> <i> : "ℹ"  # Info
+
+# Currency
+<Multi_key> <$> <e> : "€"  # Euro
+<Multi_key> <$> <p> : "£"  # Pound
+<Multi_key> <$> <y> : "¥"  # Yen
+
+# Typography & symbols
+<Multi_key> <c> <o> : "©"  # Copyright
+<Multi_key> <t> <m> : "™"  # Trademark
+<Multi_key> <r> <e> : "®"  # Registered
+<Multi_key> <.> <.> : "…"  # Ellipsis
+<Multi_key> <*> <*> : "•"  # Bullet
+<Multi_key> <-> <-> : "–"  # En dash
+<Multi_key> <-> <=> : "—"  # Em dash

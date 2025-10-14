@@ -24,11 +24,6 @@
   padding: 0 6px;
   margin: 0 1.5px;
   min-width: 9px;
-  opacity: 0.6;
-}
-
-#workspaces button.active {
-  opacity: 1;
 }
 
 #workspaces button.empty {
