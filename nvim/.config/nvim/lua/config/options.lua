@@ -4,3 +4,8 @@
 vim.opt.scrolloff = 999 -- Keep cursor centered
 vim.g.snacks_animate = false -- No goddamn animation effects
 vim.opt.numberwidth = 2 -- Minimum width for line numbers (auto-expands for 1000+ lines)
+
+-- Disable swap files and backups
+vim.opt.swapfile = false
+vim.opt.backup = false
+vim.opt.writebackup = false
