@@ -1,7 +1,20 @@
 [tools]
+# JavaScript/TypeScript runtimes
 bun = "latest"
 node = "lts"
+deno = "latest"
+
+# Python ecosystem
 python = "3.13"
+uv = "latest"           # Modern Python package manager
+
+# Systems programming
+rust = "latest"
+zig = "latest"
+go = "latest"
+
+# Optional: AI/LLM tools
+# aichat = "latest"     # Uncomment to install AI chat CLI
 
 [settings]
-idiomatic_version_file_enable_tools = ["node"]
+idiomatic_version_file_enable_tools = ["node", "python", "bun", "rust", "go", "zig", "deno"]

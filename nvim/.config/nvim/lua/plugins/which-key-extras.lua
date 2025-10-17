@@ -6,6 +6,17 @@
 -- NEW KEYBINDINGS QUICK REFERENCE:
 -- ================================
 --
+-- AI Assistants:
+--   <leader>ac    - Toggle Claude Code terminal
+--   <leader>ab    - Add buffer to Claude
+--   <leader>as    - Send selection to Claude (visual)
+--   <leader>aa    - Accept Claude diff
+--   <leader>ag    - Toggle AI Chat (CodeCompanion/Gemini)
+--   <leader>aG    - New AI Chat buffer
+--   <leader>ai    - AI Inline transformation
+--   <leader>aq    - AI Quick actions menu
+--   <leader>aA    - Add selection to AI chat (visual)
+--
 -- File & Project Management:
 --   <leader>fp    - Switch between projects (fuzzy search recent projects)
 --   <leader>fm    - Open mini.files at current file location
@@ -41,6 +52,14 @@ return {
       spec = {
         -- Add better descriptions for new features
         { "<leader>p", desc = "Yank History", mode = { "n", "x" } },
+
+        -- AI Assistant groups
+        { "<leader>a", group = "AI" },
+        { "<leader>ag", desc = "Toggle AI Chat" },
+        { "<leader>aG", desc = "New AI Chat" },
+        { "<leader>ai", desc = "AI Inline" },
+        { "<leader>aq", desc = "AI Quick Actions" },
+        { "<leader>aA", desc = "Add to AI Chat", mode = "v" },
 
         -- File/Find group already exists, but we can add subgroups if needed
         { "<leader>fp", desc = "Projects" },

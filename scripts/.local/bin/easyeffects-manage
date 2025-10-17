@@ -1,0 +1,236 @@
+#!/usr/bin/env bash
+
+# EasyEffects management script for Omarchy dotfiles
+# Provides easy commands to control EasyEffects presets and state
+
+set -euo pipefail
+
+PRESETS_DIR="$HOME/.config/easyeffects/output"
+DBUS_NAME="com.github.wwmm.easyeffects"
+DBUS_PATH="/com/github/wwmm/easyeffects"
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+error() {
+    echo -e "${RED}Error:${NC} $1" >&2
+    exit 1
+}
+
+success() {
+    echo -e "${GREEN}✓${NC} $1"
+}
+
+info() {
+    echo -e "${BLUE}ℹ${NC} $1"
+}
+
+warning() {
+    echo -e "${YELLOW}⚠${NC} $1"
+}
+
+check_running() {
+    if ! busctl --user status "$DBUS_NAME" &>/dev/null; then
+        warning "EasyEffects is not running. Starting it now..."
+        # D-Bus activation will start it automatically
+        gdbus call --session --dest "$DBUS_NAME" --object-path "$DBUS_PATH" \
+            --method org.freedesktop.DBus.Peer.Ping &>/dev/null || true
+        sleep 1
+        if ! busctl --user status "$DBUS_NAME" &>/dev/null; then
+            error "Failed to start EasyEffects"
+        fi
+        success "EasyEffects started"
+    fi
+}
+
+list_presets() {
+    echo "Available EasyEffects presets:"
+    echo ""
+    if [ -d "$PRESETS_DIR" ]; then
+        local current
+        current=$(get_current_preset)
+        for preset in "$PRESETS_DIR"/*.json; do
+            if [ -f "$preset" ]; then
+                local name
+                name=$(basename "$preset" .json)
+                if [ "$name" = "$current" ]; then
+                    echo -e "  ${GREEN}●${NC} $name (active)"
+                else
+                    echo -e "  ○ $name"
+                fi
+            fi
+        done
+    else
+        warning "No presets directory found at $PRESETS_DIR"
+    fi
+}
+
+get_current_preset() {
+    check_running
+    # Query current preset via dconf
+    dconf read /com/github/wwmm/easyeffects/streamoutputs/output-preset-name 2>/dev/null | tr -d "'" || echo ""
+}
+
+load_preset() {
+    local preset_name="$1"
+    local preset_file="$PRESETS_DIR/${preset_name}.json"
+
+    if [ ! -f "$preset_file" ]; then
+        error "Preset not found: $preset_name"
+    fi
+
+    check_running
+
+    # Load preset using dconf
+    dconf write /com/github/wwmm/easyeffects/streamoutputs/output-preset-name "'$preset_name'"
+
+    success "Loaded preset: $preset_name"
+}
+
+toggle_bypass() {
+    check_running
+
+    local current
+    current=$(dconf read /com/github/wwmm/easyeffects/streamoutputs/bypass 2>/dev/null || echo "false")
+
+    if [ "$current" = "true" ]; then
+        dconf write /com/github/wwmm/easyeffects/streamoutputs/bypass false
+        success "EasyEffects enabled"
+    else
+        dconf write /com/github/wwmm/easyeffects/streamoutputs/bypass true
+        success "EasyEffects bypassed (disabled)"
+    fi
+}
+
+show_status() {
+    echo "EasyEffects Status:"
+    echo ""
+
+    if busctl --user status "$DBUS_NAME" &>/dev/null; then
+        local pid
+        pid=$(pgrep -x easyeffects 2>/dev/null || echo "unknown")
+        echo -e "  Status: ${GREEN}Running${NC} (PID: $pid)"
+
+        local bypass
+        bypass=$(dconf read /com/github/wwmm/easyeffects/streamoutputs/bypass 2>/dev/null || echo "false")
+        if [ "$bypass" = "true" ]; then
+            echo -e "  State: ${YELLOW}Bypassed${NC}"
+        else
+            echo -e "  State: ${GREEN}Active${NC}"
+        fi
+
+        local preset
+        preset=$(get_current_preset)
+        if [ -n "$preset" ]; then
+            echo -e "  Current Preset: ${BLUE}$preset${NC}"
+        else
+            echo "  Current Preset: None"
+        fi
+
+        # Show if in audio pipeline
+        if wpctl status | grep -q "easyeffects"; then
+            echo -e "  Audio Pipeline: ${GREEN}Connected${NC}"
+        else
+            echo -e "  Audio Pipeline: ${RED}Not connected${NC}"
+        fi
+    else
+        echo -e "  Status: ${RED}Not running${NC}"
+    fi
+}
+
+restart() {
+    info "Restarting EasyEffects..."
+
+    if busctl --user status "$DBUS_NAME" &>/dev/null; then
+        # Quit via D-Bus
+        gdbus call --session --dest "$DBUS_NAME" --object-path "$DBUS_PATH" \
+            --method org.gtk.Actions.Activate quit "[]" &>/dev/null || true
+        sleep 1
+    fi
+
+    # Kill if still running
+    pkill -9 easyeffects 2>/dev/null || true
+    sleep 1
+
+    # Start via D-Bus activation
+    gdbus call --session --dest "$DBUS_NAME" --object-path "$DBUS_PATH" \
+        --method org.freedesktop.DBus.Peer.Ping &>/dev/null || true
+    sleep 1
+
+    if busctl --user status "$DBUS_NAME" &>/dev/null; then
+        success "EasyEffects restarted"
+    else
+        error "Failed to restart EasyEffects"
+    fi
+}
+
+open_gui() {
+    check_running
+    easyeffects &>/dev/null &
+    disown
+    success "Opened EasyEffects GUI"
+}
+
+usage() {
+    cat << EOF
+EasyEffects Management Script
+
+Usage: $(basename "$0") <command> [options]
+
+Commands:
+    list              List all available presets
+    load <preset>     Load a specific preset
+    status            Show current EasyEffects status
+    toggle            Toggle EasyEffects bypass (enable/disable)
+    restart           Restart EasyEffects service
+    gui               Open EasyEffects GUI
+    help              Show this help message
+
+Examples:
+    $(basename "$0") list
+    $(basename "$0") load "MacBook_Pro_Enhanced"
+    $(basename "$0") status
+    $(basename "$0") toggle
+
+Presets are stored in: $PRESETS_DIR
+EOF
+}
+
+# Main command dispatcher
+case "${1:-}" in
+    list)
+        list_presets
+        ;;
+    load)
+        if [ -z "${2:-}" ]; then
+            error "Preset name required. Use 'list' to see available presets."
+        fi
+        load_preset "$2"
+        ;;
+    status)
+        show_status
+        ;;
+    toggle)
+        toggle_bypass
+        ;;
+    restart)
+        restart
+        ;;
+    gui)
+        open_gui
+        ;;
+    help|--help|-h)
+        usage
+        ;;
+    "")
+        usage
+        exit 1
+        ;;
+    *)
+        error "Unknown command: $1\nRun '$(basename "$0") help' for usage."
+        ;;
+esac

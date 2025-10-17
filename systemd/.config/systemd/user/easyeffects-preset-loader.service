@@ -1,0 +1,17 @@
+[Unit]
+Description=Load EasyEffects macOS-Like Preset on Startup
+After=pipewire.service easyeffects.service
+Wants=pipewire.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+# Wait for EasyEffects to be fully started via D-Bus
+ExecStartPre=/bin/sh -c 'while ! busctl --user status com.github.wwmm.easyeffects >/dev/null 2>&1; do sleep 0.5; done'
+# Set the preset and disable bypass
+ExecStart=/bin/bash -c 'dconf write /com/github/wwmm/easyeffects/streamoutputs/output-preset-name "'"'"'MacBook_Pro_macOS-Like'"'"'" && dconf write /com/github/wwmm/easyeffects/streamoutputs/bypass false'
+# Give a moment for settings to apply
+ExecStartPost=/bin/sleep 1
+
+[Install]
+WantedBy=default.target

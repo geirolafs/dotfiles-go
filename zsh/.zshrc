@@ -93,3 +93,4 @@ eval "$(mise activate zsh)"
 
 # Initialize starship prompt
 eval "$(starship init zsh)"
+alias nvg="NVIM_APPNAME=nvim-go nvim"

@@ -287,6 +287,15 @@ imac-vnc-stop              # Stop VNC and restart hypridle (on iMac)
 # Tailscale connection diagnostics
 tailscale ping $IMAC_IP    # Check connection type and latency
 tailscale status           # Show all devices on tailnet
+
+# EasyEffects audio processing (system-wide EQ, limiter, compression)
+easyeffects-manage list            # List available presets (38 total)
+easyeffects-manage load MacBook_Pro_macOS-Like  # Load macOS-like preset (default)
+easyeffects-manage status          # Show current status and active preset
+easyeffects-manage toggle          # Toggle bypass (enable/disable effects)
+easyeffects-manage restart         # Restart EasyEffects service
+easyeffects-manage gui             # Open EasyEffects GUI
+easyeffects-set-default "PresetName"  # Set default preset for autostart
 ```
 
 ### Debugging and Testing
@@ -309,12 +318,170 @@ ls ~/.local/share/omarchy/themes/        # List available themes
 systemctl --user status wireplumber pipewire
 pw-top                    # Monitor PipeWire graph
 wpctl status             # Check WirePlumber devices
+easyeffects-manage status # Check EasyEffects status and preset
 
 # Service debugging
 systemctl --user status battery-monitor
 journalctl --user -u battery-monitor -f
 systemctl --user list-units --type=service --state=running
 ```
+
+## Tool Management Strategy
+
+This system uses a hybrid approach for managing development tools, CLI utilities, and system services. The strategy prioritizes version isolation for development runtimes while maintaining system-wide stability for utilities.
+
+### mise-managed Tools
+
+**Purpose**: Development runtimes and tools requiring per-project version isolation
+
+**Location**: `~/.config/mise/config.toml` (symlinked from `~/.dotfiles/mise/.config/mise/config.toml`)
+
+**Currently managed tools**:
+- **JavaScript/TypeScript**: Node.js (lts), Bun (latest), Deno (latest)
+- **Python**: Python 3.13, uv (latest Python package manager)
+- **Systems Programming**: Rust (latest), Zig (latest), Go (latest)
+- **Python Tools**: ruff (linter/formatter)
+
+**Key benefits**:
+- Per-project version locking (add `.mise.toml` to any project)
+- Automatic version switching when changing directories
+- No sudo required for installation
+- Cross-platform consistency
+- Replaces nvm, pyenv, rbenv, rustup, etc.
+
+**Usage**:
+```bash
+# Install all configured tools
+mise install
+
+# Add tool to global config
+mise use -g <tool>@<version>
+
+# Per-project version
+cd my-project
+mise use rust@1.75.0        # Creates .mise.toml with rust = "1.75.0"
+
+# Check active versions in current directory
+mise current
+
+# List all installed versions
+mise ls
+```
+
+**Idiomatic version files**: mise automatically respects `.nvmrc`, `.node-version`, `.python-version`, `.ruby-version`, `.tool-versions` files when enabled in settings (currently enabled for node, python, bun, rust, go, zig, deno).
+
+### System-managed Tools (pacman)
+
+**Purpose**: System services, stable utilities, and tools with system dependencies
+
+**Examples**:
+- **Services**: Docker, Ollama (require systemd)
+- **Stable CLI tools**: bat, eza, fd, ripgrep, fzf, lazygit, gh, jq, starship, zoxide
+- **Editors**: neovim, vim
+- **System integration**: Tools needing udev rules, kernel modules, or system-wide configuration
+
+**Key benefits**:
+- System-wide availability for all users
+- Automatic security updates via `pacman -Syu`
+- Integration with systemd services
+- Package manager handles system dependencies
+
+**Update command**:
+```bash
+sudo pacman -Syu            # Update all system packages
+```
+
+### Custom Scripts
+
+**Purpose**: Workflow automation, system-specific configurations, and tool integration
+
+**Location**: `~/.dotfiles/scripts/.local/bin/` (symlinked to `~/.local/bin/`)
+
+**Management**: GNU Stow for symlinking
+
+**Categories**:
+- **Font management**: `font-activate`, `font-deactivate`, `font-refresh`, `font-list-active`
+- **Cloud sync**: `dropbox-mount`, `dropbox-sync-all`, `dropbox-sync-fonts`
+- **Audio**: `easyeffects-manage`, `easyeffects-set-default`
+- **Network**: `nordvpn-tui`, `imac-vnc-start`, `imac-vnc-stop`
+- **Applications**: `figma-agent`, `messenger-chromium`
+- **System**: `battery-monitor`, `keyboard-backlight-swayidle.sh`
+
+**Adding new scripts**:
+```bash
+# Add script to dotfiles
+cd ~/.dotfiles/scripts/.local/bin/
+nano my-new-script
+chmod +x my-new-script
+
+# Re-stow to create symlink
+cd ~/.dotfiles
+stow -R scripts
+
+# Verify
+which my-new-script
+```
+
+### Package Manager Isolation (pnpm vs Bun)
+
+Development projects use Corepack to enforce per-project package managers:
+
+**pnpm projects** (e.g., gangverk-geir):
+- `packageManager: "pnpm@10.18.3"` in package.json
+- `.mise.toml` specifies Node.js version
+- Preinstall script blocks npm/yarn/bun
+
+**Bun projects** (e.g., portfolio-website):
+- `packageManager: "bun@1.2.23"` in package.json
+- `.mise.toml` specifies Bun version
+- Preinstall script blocks npm/yarn/pnpm
+
+**Result**: No cross-contamination between projects, automatic version enforcement
+
+### LLM & AI Tools
+
+**Ollama** (system service):
+- Installed via pacman
+- Runs as systemd service: `systemctl status ollama`
+- Models stored in `~/.ollama/models/`
+
+**Claude CLI** (user-local):
+- Installed at `~/.local/bin/claude` → `~/.local/share/claude/versions/2.0.17`
+- Managed via npm: `@anthropic-ai/claude-code`
+
+**aichat** (optional, via mise):
+- Available in mise registry: `mise use -g aichat@latest`
+- Supports multiple LLM providers (OpenAI, Anthropic, Ollama, etc.)
+
+### When to Use Each Approach
+
+**Use mise when**:
+- Tool has per-project version requirements
+- Frequently updated development tool
+- Available in mise registry
+- No system dependencies required
+- Want version isolation
+
+**Use pacman when**:
+- Tool requires systemd service
+- Stable utility rarely needing updates
+- Has complex system dependencies
+- Needs system-wide availability
+- Security-critical (benefits from distro updates)
+
+**Create custom script when**:
+- Workflow automation needed
+- Integration between multiple tools
+- System-specific configuration
+- Convenience wrapper for complex commands
+
+### Complete Tool Inventory
+
+See **TOOLS.md** in this repository for:
+- Complete list of all installed tools
+- Version numbers and locations
+- Usage examples and documentation
+- Tool-specific configuration notes
 
 ## Architecture
 
@@ -519,6 +686,7 @@ When a setting appears in multiple places, the priority order is:
 ### Systemd User Services
 Services managed by this dotfiles repo (organized by module):
 - `systemd/` - `sync-system-font.service` + `.path` - Automatic font synchronization
+- `systemd/` - `easyeffects-preset-loader.service` - Load default EasyEffects preset on boot
 - `figma/` - `figma-agent.service` + `.socket` - Local font server for Figma
 - `rclone/` - `dropbox-sync-all.service` + `.timer` - Periodic Dropbox sync (every 30 minutes)
 

@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+
+# Set default EasyEffects preset
+# Usage: easyeffects-set-default "PresetName"
+
+set -euo pipefail
+
+PRESET_NAME="${1:-MacBook_Pro_macOS-Like}"
+
+# Colors
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+echo -e "${BLUE}Setting default EasyEffects preset to:${NC} $PRESET_NAME"
+
+# Set the preset
+dconf write /com/github/wwmm/easyeffects/streamoutputs/output-preset-name "'$PRESET_NAME'"
+
+# Disable bypass (enable effects)
+dconf write /com/github/wwmm/easyeffects/streamoutputs/bypass false
+
+# If EasyEffects is running, reload the preset
+if busctl --user status com.github.wwmm.easyeffects &>/dev/null; then
+    echo -e "${BLUE}EasyEffects is running, loading preset...${NC}"
+
+    # Use easyeffects-manage if available
+    if command -v easyeffects-manage &>/dev/null; then
+        easyeffects-manage load "$PRESET_NAME"
+    else
+        # Restart EasyEffects to pick up changes
+        gdbus call --session --dest com.github.wwmm.easyeffects \
+            --object-path /com/github/wwmm/easyeffects \
+            --method org.gtk.Actions.Activate quit "[]" &>/dev/null || true
+        sleep 1
+    fi
+fi
+
+echo -e "${GREEN}✓${NC} Default preset set to: $PRESET_NAME"
+echo -e "${BLUE}ℹ${NC} This preset will load automatically on next login"
